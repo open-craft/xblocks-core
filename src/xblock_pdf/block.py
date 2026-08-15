@@ -1,20 +1,34 @@
 """pdfXBlock main Python class."""
 
 import json
+from logging import getLogger
+from urllib.parse import urlparse
 
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_noop as _
+from requests import HTTPError, Timeout
 from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Boolean, Scope, String
 from xblock.utils.resources import ResourceLoader
 
-from .utils import bool_from_str, is_all_download_disabled
+from .utils import (
+    add_asset,
+    convert_to_pdf,
+    error_response,
+    fetch_source_asset,
+    is_all_download_disabled,
+    is_gotenberg_enabled,
+)
 
 resource_loader = ResourceLoader(__name__)
 
+logger = getLogger(__name__)
 
-@XBlock.needs("i18n")
+
+@XBlock.needs("i18n", "user")
+@XBlock.wants("studio_user_permissions")
 class PDFBlock(XBlock):
     """PDF XBlock. Allows authors to embed PDFs in their courses."""
 
@@ -69,6 +83,7 @@ class PDFBlock(XBlock):
             "url": self.url,
             "allow_download": self.allow_download,
             "disable_all_download": is_all_download_disabled(),
+            "conversion_available": is_gotenberg_enabled(),
             "source_text": self.source_text,
             "source_url": self.source_url,
         }
@@ -114,16 +129,35 @@ class PDFBlock(XBlock):
         return Response(json.dumps(self.raw_settings), content_type="application/json", charset="utf8")
 
     @XBlock.json_handler
-    def save_pdf(self, data, suffix=""):  # pylint: disable=unused-argument
-        """Save handler."""
-        self.display_name = data["display_name"]
-        self.url = data["url"]
-
-        if not is_all_download_disabled():
-            self.allow_download = bool_from_str(data["allow_download"])
-            self.source_text = data["source_text"]
-            self.source_url = data["source_url"]
-
-        return {
-            "result": "success",
-        }
+    def convert_pdf(self, data, suffix=""):  # pylint: disable=unused-argument
+        """
+        PDF Conversion handling. Basically just a frontend to the Gotenberg service which converts the given URL
+        and then saves it to course assets, returning the URL.
+        """
+        permissions_service = self.runtime.service(self, "studio_user_permissions")
+        if not permissions_service:
+            return error_response(
+                {"error": _("Conversion endpoint may only be called in a studio permissions-aware environment.")}
+            )
+        if not permissions_service.can_write(self.context_key):
+            return error_response(
+                {"error": _("You do not have permission to manage files for this block.")},
+                status=403,
+            )
+        if not is_gotenberg_enabled():
+            return error_response({"error": _("Gotenberg not enabled. PDF Conversion unavailable.")})
+        user_service = self.runtime.service(self, "user")
+        user_attrs = user_service.get_current_user().opt_attrs
+        user = get_user_model().objects.get(id=user_attrs.get("edx-platform.user_id"))
+        output_name = f"{self.scope_ids.usage_id}.pdf"
+        try:
+            file_bytes = fetch_source_asset(self.scope_ids.usage_id, data["url"])
+        except (HTTPError, Timeout):
+            logger.exception(_("Failed to fetch document at %s."), data["url"])
+            return error_response({"error": _("Could not fetch source document.")}, status=502)
+        source_url = urlparse(data["url"])
+        source_filename = source_url.path.split("/")[-1]
+        result = convert_to_pdf(source_filename, file_bytes, output_name)
+        if result is None:
+            return error_response({"error": _("PDF Conversion failed.")}, status=500)
+        return {"url": add_asset(self.scope_ids.usage_id, result, user)}

@@ -1,21 +1,73 @@
 """Tests for the PDF Block"""
 
 import json
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, TypedDict
 from unittest.mock import MagicMock, patch
 
+import pytest
+from django.contrib.auth.models import User
 from django.test import override_settings
+from requests import Response
+from requests.exceptions import HTTPError
 from xblock.field_data import DictFieldData
 from xblock.fields import ScopeIds
 from xblock.test.toy_runtime import ToyRuntime
 
 from xblock_pdf import PDFBlock
+from xblock_pdf.utils import error_response, fetch_external_url
+
+MockOptValues = TypedDict("MockOptValues", {"edx-platform.user_is_staff": bool, "edx-platform.user_id": int})
 
 
-def make_block(**fields: str) -> PDFBlock:
+@dataclass
+class MockUser:
+    opt_attrs: MockOptValues
+
+
+class ToyUserService:
+    """
+    Toy version of the user service that implements just enough for us to work with.
+    """
+
+    def __init__(self, *, user_id: int, is_staff=False):
+        self._user = MockUser(opt_attrs={"edx-platform.user_is_staff": is_staff, "edx-platform.user_id": user_id})
+
+    def get_current_user(self):
+        return self._user
+
+
+class ToyPermissionsService:
+    """
+    Toy version of the studio_user_permissions service.
+    """
+
+    def __init__(self, can_read=True, can_write=False):
+        self._can_read = can_read
+        self._can_write = can_write
+
+    def can_read(self, _context_key):
+        return self._can_read
+
+    def can_write(self, _context_key):
+        return self._can_write
+
+
+class ToyServiceRuntime(ToyRuntime):
+    """
+    Modified toy runtime that includes custom services for mocking/testing.
+    """
+
+    def __init__(self, *, services: dict[str, Any] | None = None):
+        super().__init__()
+        if services is not None:
+            self._services.update(services)
+
+
+def make_block(*, services: dict[str, Any] | None = None, **fields: str) -> PDFBlock:
     """Build a block with specific fields set."""
     scope_ids = ScopeIds("1", "2", "3", "4")
-    return PDFBlock(ToyRuntime(), scope_ids=scope_ids, field_data=DictFieldData(data=fields))
+    return PDFBlock(ToyServiceRuntime(services=services), scope_ids=scope_ids, field_data=DictFieldData(data=fields))
 
 
 def get_student_content(block: PDFBlock) -> str:
@@ -52,7 +104,7 @@ def test_download_button():
 
 
 def test_source_url():
-    """Test rendering based on whether or not there's a source URL"""
+    """Test rendering based on whether there's a source URL"""
     block = make_block()
     get_student_content(block)
     content = get_student_content(block)
@@ -60,60 +112,6 @@ def test_source_url():
     block.source_url = "https://example.com/"
     content = get_student_content(block)
     assert "Download the source document" in content
-
-
-@override_settings(PDFXBLOCK_DISABLE_ALL_DOWNLOAD=False)
-def test_saves_settings():
-    """Test that PDF settings are saved."""
-    block = make_block()
-    request = mock_handle_request(
-        {
-            "display_name": "Novel application of theory",
-            "url": "https://example.com/nature_article.pdf",
-            "allow_download": "false",
-            "source_text": "Get educated",
-            "source_url": "https://example.com/nature_article.tex",
-        }
-    )
-    block.save_pdf(request)
-    assert block.display_name == "Novel application of theory"
-    assert block.url == "https://example.com/nature_article.pdf"
-    assert not block.allow_download
-    assert block.source_text == "Get educated"
-    assert block.source_url == "https://example.com/nature_article.tex"
-
-
-@override_settings(PDFXBLOCK_DISABLE_ALL_DOWNLOAD=True)
-def test_saves_settings_omits_on_download_disabled_flag():
-    """
-    Test that fields relating to download are ignored when the universal
-    downloads disabled flag is set.
-    """
-    block = make_block()
-    request = mock_handle_request(
-        {
-            "display_name": "Novel application of theory",
-            "url": "https://example.com/nature_article.pdf",
-            # These fields shouldn't be visible on the front end,
-            # but should be dropped if they somehow are.
-            #
-            # Potential future improvement would be saving these
-            # but ignoring them when rendering. This is not currently
-            # the case since the fields are entirely absent from the studio
-            # render, and so would send blank data which would error out.
-            "allow_download": "false",
-            "source_text": "Get educated",
-            "source_url": "https://example.com/nature_article.tex",
-        }
-    )
-    block.save_pdf(request)
-    assert block.display_name == "Novel application of theory"
-    assert block.url == "https://example.com/nature_article.pdf"
-    # Flag will be the default, which is True, even though download will be
-    # disabled in practice.
-    assert block.allow_download
-    assert block.source_text == ""
-    assert block.source_url == ""
 
 
 @patch.object(ToyRuntime, "publish")
@@ -138,3 +136,130 @@ def test_get_settings():
     request = mock_handle_request({}, method="GET")
     result = json.loads(block.load_pdf(request).body)
     assert result["display_name"] == "PDF"
+
+
+@override_settings(GOTENBERG_HOST=None)
+def test_convert_pdf_fails_no_gotenberg():
+    """
+    Test that PDF conversion fails if Gotenberg is not available.
+    """
+    block = make_block(
+        services={
+            "studio_user_permissions": ToyPermissionsService(can_write=True),
+        }
+    )
+    request = mock_handle_request({"url": "https://example.com/thing.doc"})
+    result = block.convert_pdf(request)
+    assert result.status_code == 400
+    assert b"Gotenberg not enabled. PDF Conversion unavailable." in result.body
+
+
+@override_settings(GOTENBERG_HOST=None)
+def test_convert_pdf_fails_no_permissions_service():
+    """
+    Test that PDF conversion fails if Gotenberg is not available.
+    """
+    block = make_block()
+    request = mock_handle_request({"url": "https://example.com/thing.doc"})
+    result = block.convert_pdf(request)
+    assert result.status_code == 400
+    assert b"Conversion endpoint may only be called in a studio permissions-aware environment." in result.body
+
+
+@override_settings(GOTENBERG_HOST=None)
+def test_convert_pdf_fails_not_authorized():
+    """
+    Test that PDF conversion fails if Gotenberg is not available.
+    """
+    block = make_block(
+        services={
+            "studio_user_permissions": ToyPermissionsService(can_write=False),
+        }
+    )
+    request = mock_handle_request({"url": "https://example.com/thing.doc"})
+    result = block.convert_pdf(request)
+    assert result.status_code == 403
+    assert b"You do not have permission to manage files for this block." in result.body
+
+
+@override_settings(GOTENBERG_HOST="https://gotenberg/")
+@patch("xblock_pdf.pdf.logger")
+@patch("xblock_pdf.pdf.fetch_source_asset")
+@pytest.mark.django_db
+def test_failed_fetch_logs(mock_fetch, mock_log):
+    block = make_block(
+        services={
+            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "user": ToyUserService(
+                is_staff=True, user_id=User.objects.create(username="beep", email="beep@example.com").id
+            ),
+        }
+    )
+    mock_fetch.side_effect = HTTPError(response=error_response({"error": "Failed."}, status=400))
+    request = mock_handle_request({"url": "https://example.com/thing.doc"})
+    result = block.convert_pdf(request)
+    assert mock_log.exception.has_been_called()
+    assert result.status_code == 502
+    assert b"Could not fetch source document." in result.body
+
+
+@override_settings(GOTENBERG_HOST="https://gotenberg/")
+@patch("xblock_pdf.utils.requests")
+@patch("xblock_pdf.pdf.fetch_source_asset")
+@pytest.mark.django_db
+def test_failed_conversion(mock_fetch, mock_requests):
+    block = make_block(
+        services={
+            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "user": ToyUserService(
+                is_staff=True, user_id=User.objects.create(username="beep", email="beep@example.com").id
+            ),
+        }
+    )
+    mock_fetch.return_value = b"beep"
+    mock_requests.return_value = error_response({"error": "Nope."})
+    request = mock_handle_request({"url": "https://example.com/thing.doc"})
+    result = block.convert_pdf(request)
+    assert result.status_code == 500
+    assert b"PDF Conversion failed." in result.body
+
+
+@override_settings(GOTENBERG_HOST="https://gotenberg/")
+@patch("xblock_pdf.pdf.add_asset")
+@patch("xblock_pdf.utils.requests")
+@patch("xblock_pdf.pdf.fetch_source_asset")
+@pytest.mark.django_db
+def test_successful_conversion_with_perms_service(mock_fetch, mock_requests, mock_add_asset):
+    block = make_block(
+        services={
+            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "user": ToyUserService(
+                is_staff=True, user_id=User.objects.create(username="beep", email="beep@example.com").id
+            ),
+        }
+    )
+    mock_fetch.return_value = b"beep"
+    mock_response = Response()
+    mock_response.__setstate__({"status_code": 200, "_content": b"boop"})
+    mock_requests.post.return_value = mock_response
+    mock_add_asset.return_value = "https://example.com/exported.pdf"
+    request = mock_handle_request({"url": "https://example.com/thing.doc"})
+    result = block.convert_pdf(request)
+    assert result.status_code == 200
+    assert b"https://example.com/exported.pdf" in result.body
+
+
+@override_settings(LMS_ROOT_URL="https://example.com/")
+def test_fetch_external_url_raises():
+    with pytest.raises(HTTPError):
+        fetch_external_url("https://foo.bar")
+
+
+@override_settings(LMS_ROOT_URL="https://example.com/")
+@patch("xblock_pdf.utils.requests")
+def test_fetch_external_url(mock_requests):
+    mock_response = Response()
+    mock_response.__setstate__({"status_code": 200, "_content": b"boop"})
+    mock_requests.get.return_value = mock_response
+    result = fetch_external_url("https://example.com/beep.pdf")
+    assert result == b"boop"
