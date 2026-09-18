@@ -42,15 +42,16 @@ class ToyPermissionsService:
     Toy version of the studio_user_permissions service.
     """
 
-    def __init__(self, can_read=True, can_write=False):
-        self._can_read = can_read
-        self._can_write = can_write
+    def __init__(self, can_read_files=True, can_edit_files=False, can_create_files=False):
+        self._can_read_files = can_read_files
+        self._can_edit_files = can_edit_files
+        self._can_create_files = can_create_files
 
-    def can_read(self, _context_key):
-        return self._can_read
+    def can_edit_files(self, _context_key):
+        return self._can_edit_files
 
-    def can_write(self, _context_key):
-        return self._can_write
+    def can_create_files(self, _context_key):
+        return self._can_create_files
 
 
 class ToyServiceRuntime(ToyRuntime):
@@ -145,7 +146,7 @@ def test_convert_pdf_fails_no_gotenberg():
     """
     block = make_block(
         services={
-            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "studio_user_permissions": ToyPermissionsService(can_edit_files=True, can_create_files=True),
         }
     )
     request = mock_handle_request({"url": "https://example.com/thing.doc"})
@@ -173,7 +174,7 @@ def test_convert_pdf_fails_not_authorized():
     """
     block = make_block(
         services={
-            "studio_user_permissions": ToyPermissionsService(can_write=False),
+            "studio_user_permissions": ToyPermissionsService(can_edit_files=False, can_create_files=True),
         }
     )
     request = mock_handle_request({"url": "https://example.com/thing.doc"})
@@ -189,7 +190,7 @@ def test_convert_pdf_fails_not_authorized():
 def test_failed_fetch_logs(mock_fetch, mock_log):
     block = make_block(
         services={
-            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "studio_user_permissions": ToyPermissionsService(can_edit_files=True, can_create_files=True),
             "user": ToyUserService(
                 is_staff=True, user_id=User.objects.create(username="beep", email="beep@example.com").id
             ),
@@ -210,7 +211,7 @@ def test_failed_fetch_logs(mock_fetch, mock_log):
 def test_failed_conversion(mock_fetch, mock_requests):
     block = make_block(
         services={
-            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "studio_user_permissions": ToyPermissionsService(can_edit_files=True, can_create_files=True),
             "user": ToyUserService(
                 is_staff=True, user_id=User.objects.create(username="beep", email="beep@example.com").id
             ),
@@ -232,7 +233,7 @@ def test_failed_conversion(mock_fetch, mock_requests):
 def test_successful_conversion_with_perms_service(mock_fetch, mock_requests, mock_add_asset):
     block = make_block(
         services={
-            "studio_user_permissions": ToyPermissionsService(can_write=True),
+            "studio_user_permissions": ToyPermissionsService(can_edit_files=True, can_create_files=True),
             "user": ToyUserService(
                 is_staff=True, user_id=User.objects.create(username="beep", email="beep@example.com").id
             ),

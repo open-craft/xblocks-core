@@ -139,7 +139,12 @@ class PDFBlock(XBlock):
             return error_response(
                 {"error": _("Conversion endpoint may only be called in a studio permissions-aware environment.")}
             )
-        if not permissions_service.can_write(self.context_key):
+        can_upload = (
+            # Need both, since we implicitly overwrite previously generated PDFs as-needed.
+            permissions_service.can_edit_files(self.context_key)
+            and permissions_service.can_create_files(self.context_key)
+        )
+        if not can_upload:
             return error_response(
                 {"error": _("You do not have permission to manage files for this block.")},
                 status=403,
