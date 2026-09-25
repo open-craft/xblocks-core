@@ -179,6 +179,15 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
         values=[{"display_name": _("Visual"), "value": "visual"}, {"display_name": _("Raw"), "value": "raw"}],
         scope=Scope.settings,
     )
+    # Opt-in styling for this block. When enabled the block renders its HTML in
+    # a shadow root carrying the MFE theme, so page styles cannot reach the
+    # content and the content cannot leak styles back into the page.
+    include_theme = Boolean(
+        help=_("If enabled, this content is styled with the MFE theme and rendered in isolation."),
+        display_name=_("Use MFE Theme"),
+        default=False,
+        scope=Scope.settings,
+    )
 
     ENABLE_HTML_XBLOCK_STUDENT_VIEW_DATA = "ENABLE_HTML_XBLOCK_STUDENT_VIEW_DATA"
 
@@ -190,9 +199,22 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
     def student_view(self, _context):
         """Return a fragment that contains the html for the student view."""
         frag = Fragment(self.get_html())
-        frag.add_css(resource_loader.load_unicode("static/css/html.css"))
-        frag.add_javascript("""function HtmlBlock(runtime, element){}""")
-        frag.initialize_js("HtmlBlock")
+        # The legacy html.css is not loaded for themed blocks; the theme is
+        # applied inside the block's shadow root instead.
+        if not self.include_theme:
+            frag.add_css(resource_loader.load_unicode("static/css/html.css"))
+
+        frag.add_javascript(resource_loader.load_unicode("static/js/html_block.js"))
+
+        # The MFE config API is only served by the LMS, so point at it
+        # explicitly; in Studio this falls back to the CDN defaults.
+        frag.initialize_js(
+            "HtmlBlock",
+            {
+                "include_theme": self.include_theme,
+                "mfe_config_api": f"{settings.LMS_ROOT_URL}/api/mfe_config/v1",
+            },
+        )
         return frag
 
     @XBlock.supports("multi_device")
