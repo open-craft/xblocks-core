@@ -45,7 +45,7 @@
    * Work out which variant is active.
    *
    * Two shapes are published in practice: frontend-base's `Theme`
-   * (https://github.com/openedx/frontend-base/blob/main/types.ts) carries a
+   * (https://github.com/openedx/frontend-base/blob/main/types.ts) carries an optional
    * `defaults` map naming the active light and dark variants, while tutor-indigo
    * (https://github.com/overhangio/tutor-indigo) ships only a `variants` map with
    * nothing pointing at one. So read `defaults` when it is there, and otherwise
