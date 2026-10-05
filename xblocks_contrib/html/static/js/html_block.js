@@ -23,22 +23,22 @@
    * @param {string} mfeConfigApiUrl - URL of the MFE config API.
    * @returns {Promise<{core: string[], theme: string[]}>}
    */
-  function getThemes(mfeConfigApiUrl) {
-    return fetch(mfeConfigApiUrl)
-      .then(function (response) { return response.json(); })
-      .then(function (mfeConfig) { return mfeConfig.PARAGON_THEME_URLS || {}; })
-      .catch(function (error) {
-        // Not fatal: the block still renders, just with the CDN defaults.
-        console.error('Text XBlock: failed to fetch theme URLs:', error);
-        return {};
-      })
-      .then(function (themeUrls) {
-        var variant = themeUrls.variants && themeUrls.variants[activeVariant(themeUrls)];
-        return {
-          core: [pickUrl(themeUrls.core) || CDN_CORE].filter(Boolean),
-          theme: [pickUrl(variant)].filter(Boolean),
-        };
-      });
+  async function getThemes(mfeConfigApiUrl) {
+    let themeUrls;
+    try {
+      var response = await fetch(mfeConfigApiUrl);
+      var mfeConfig = await response.json();
+      themeUrls = mfeConfig.PARAGON_THEME_URLS || {};
+    } catch (error) {
+      // Not fatal: the block still renders, just with the CDN defaults.
+      console.error('Text XBlock: failed to fetch theme URLs:', error);
+      themeUrls = {};
+    }
+    var variant = themeUrls.variants && themeUrls.variants[activeVariant(themeUrls)];
+    return {
+      core: [pickUrl(themeUrls.core) || CDN_CORE].filter(Boolean),
+      theme: [pickUrl(variant)].filter(Boolean),
+    };
   }
 
   /**
