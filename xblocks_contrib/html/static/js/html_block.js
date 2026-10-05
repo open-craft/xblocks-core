@@ -82,23 +82,19 @@
   }
 
   /**
-   * Attach a stylesheet to the shadow root and, if it is not already present,
-   * to the document as well.
+   * Attach a stylesheet inside the shadow root only.
    *
-   * Some themes (including Paragon) have custom properties declared on `:root`,
-   * and `:root` does not cross a shadow boundary. Attaching the theme only inside
-   * the shadow root would therefore leave every custom property unresolved. The
-   * stylesheets are consequently attached to the shadow root *and* to the document.
+   * Paragon declares its custom properties on `:root`, which matches nothing
+   * inside a shadow tree, but they still reach the content by inheritance through
+   * the host element. Attaching to the document as well would restyle every
+   * other block sharing the page, since Paragon core carries top-level rules for
+   * bare element selectors.
    */
   function addStylesheet(shadowRoot, url) {
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = url;
     shadowRoot.appendChild(link);
-
-    if (!document.head.querySelector('link[href="' + url + '"]')) {
-      document.head.appendChild(link.cloneNode());
-    }
   }
 
   /**
