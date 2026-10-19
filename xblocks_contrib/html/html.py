@@ -184,7 +184,7 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
     # content and the content cannot leak styles back into the page.
     use_mfe_theming = Boolean(
         help=_("If enabled, this content is styled with the MFE theme and rendered in isolation."),
-        display_name=_("Use MFE Theme"),
+        display_name=_("Apply theme styles"),
         default=False,
         scope=Scope.settings,
     )
