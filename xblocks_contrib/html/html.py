@@ -182,7 +182,7 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
     # Opt-in styling for this block. When enabled the block renders its HTML in
     # a shadow root carrying the MFE theme, so page styles cannot reach the
     # content and the content cannot leak styles back into the page.
-    include_theme = Boolean(
+    use_mfe_theming = Boolean(
         help=_("If enabled, this content is styled with the MFE theme and rendered in isolation."),
         display_name=_("Use MFE Theme"),
         default=False,
@@ -201,7 +201,7 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
         frag = Fragment(self.get_html())
         # The legacy html.css is not loaded for themed blocks; the theme is
         # applied inside the block's shadow root instead.
-        if not self.include_theme:
+        if not self.use_mfe_theming:
             frag.add_css(resource_loader.load_unicode("static/css/html.css"))
 
         frag.add_javascript(resource_loader.load_unicode("static/js/html_block.js"))
@@ -211,7 +211,7 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
         frag.initialize_js(
             "HtmlBlock",
             {
-                "include_theme": self.include_theme,
+                "use_mfe_theming": self.use_mfe_theming,
                 "mfe_config_api": f"{settings.LMS_ROOT_URL}/api/mfe_config/v1",
             },
         )
