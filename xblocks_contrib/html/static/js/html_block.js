@@ -14,11 +14,11 @@
   /**
    * Fetch the Paragon theme stylesheet URLs from the MFE config API.
    *
-   * Returns `core` and `theme` arrays built from PARAGON_THEME_URLS, falling back
-   * to the CDN defaults for whatever the deployment does not publish. The
-   * deployment's own layers are preferred over the CDN ones so there is a single
-   * source of truth for theme URLs: Studio's editor reads the same key and builds
-   * its preview from it, so whatever is attached here is what is previewed there.
+   * Returns `core` and `theme` arrays built from PARAGON_THEME_URLS. Each entry
+   * may be layered (Paragon's stylesheet plus a brand override), so both URLs are
+   * kept; only `core` falls back to the CDN when the deployment publishes none.
+   * Studio's editor reads the same key and builds its preview from it, so whatever
+   * is attached here is what is previewed there.
    *
    * @param {string} mfeConfigApiUrl - URL of the MFE config API.
    * @returns {Promise<{core: string[], theme: string[]}>}
@@ -35,9 +35,10 @@
       themeUrls = {};
     }
     var variant = themeUrls.variants && themeUrls.variants[activeVariant(themeUrls)];
+    var coreUrls = layerUrls(themeUrls.core);
     return {
-      core: [pickUrl(themeUrls.core) || CDN_CORE].filter(Boolean),
-      theme: [pickUrl(variant)].filter(Boolean),
+      core: coreUrls.length ? coreUrls : [CDN_CORE],
+      theme: layerUrls(variant),
     };
   }
 
@@ -64,21 +65,24 @@
   }
 
   /**
-   * Pick the stylesheet URL out of a `core` or `variants` entry.
+   * Return the stylesheet URLs for a `core` or `variants` entry, in the order
+   * the platform applies them.
    *
    * Entries appear either nested (`{urls: {default, brandOverride}}`, as
-   * tutor-indigo publishes) or flat (`{url}`). Prefer `brandOverride` so the
-   * deployment's theme layers on top of the CDN build, and fall back to
-   * `default` for configurations that publish only that.
+   * frontend-platform and tutor-indigo publish) or flat (`{url}`). The nested
+   * form is layered: `default` is the Paragon stylesheet and `brandOverride` is
+   * the brand package, which is built to be imported *on top of* it rather than
+   * to replace it. Returning both matches frontend-platform's loader; a
+   * deployment that points them at the same file is de-duplicated by the caller.
    */
-  function pickUrl(entry) {
+  function layerUrls(entry) {
     if (!entry) {
-      return undefined;
+      return [];
     }
     if (entry.urls) {
-      return entry.urls.brandOverride || entry.urls.default || entry.url;
+      return [entry.urls.default, entry.urls.brandOverride].filter(Boolean);
     }
-    return entry.url;
+    return entry.url ? [entry.url] : [];
   }
 
   /**
@@ -135,8 +139,12 @@
     var root = sandbox(element);
 
     getThemes(initArgs.mfe_config_api).then(function (themes) {
+      var seen = {};
       [...themes.core, ...themes.theme].forEach(function (url) {
-        addStylesheet(root.getRootNode(), url);
+        if (!seen[url]) {
+          seen[url] = true;
+          addStylesheet(root.getRootNode(), url);
+        }
       });
     });
   }
