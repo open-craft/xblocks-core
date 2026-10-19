@@ -128,7 +128,7 @@
    * @param {Object} initArgs - Data supplied by `Fragment.initialize_js`.
    */
   function HtmlBlock(runtime, element, initArgs) {
-    if (!initArgs || !initArgs.include_theme) {
+    if (!initArgs || !initArgs.use_mfe_theming) {
       return;
     }
 
