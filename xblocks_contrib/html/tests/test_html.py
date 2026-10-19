@@ -175,7 +175,7 @@ class HtmlBlockCourseApiTestCase(unittest.TestCase):
         return getattr(block, view)({})
 
     def test_default_use_mfe_theming_is_false(self):
-        """The opt-in defaults to off, so existing blocks render unchanged."""
+        """The field defaults to off, so existing blocks render unchanged."""
         block = HtmlBlock(get_test_system(), DictFieldData({}), Mock())
         assert block.use_mfe_theming is False
 
