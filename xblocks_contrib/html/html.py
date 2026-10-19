@@ -179,9 +179,12 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
         values=[{"display_name": _("Visual"), "value": "visual"}, {"display_name": _("Raw"), "value": "raw"}],
         scope=Scope.settings,
     )
-    # Opt-in styling for this block. When enabled the block renders its HTML in
-    # a shadow root carrying the MFE theme, so page styles cannot reach the
-    # content and the content cannot leak styles back into the page.
+    # MFE theming for this block: new blocks default to on, and an author can
+    # turn it off. The field default stays False so a block that has never stored
+    # the setting (every block written before it existed) keeps rendering as it
+    # did. When on, the block renders its HTML in a shadow root carrying the MFE
+    # theme, so page styles cannot reach the content and the content cannot leak
+    # styles back into the page.
     use_mfe_theming = Boolean(
         help=_("If enabled, this content is styled with the MFE theme and rendered in isolation."),
         display_name=_("Apply theme styles"),
