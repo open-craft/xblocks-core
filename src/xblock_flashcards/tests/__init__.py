@@ -1,0 +1,3 @@
+"""
+Flashcard XBlock tests.
+"""

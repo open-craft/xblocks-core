@@ -28,6 +28,8 @@ These are the XBlocks being moved here, and each of their statuses:
 * ``discussion`` -- Ready to Use
 * ``problem`` -- Ready to Use
 * ``video`` -- Ready to Use
+* ``openedx_flashcards`` -- In Development
+* ``openedx_matching`` -- In Development
 
 The possible XBlock statuses are:
 
