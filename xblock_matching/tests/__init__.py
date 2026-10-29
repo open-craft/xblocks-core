@@ -1,0 +1,3 @@
+"""
+Games XBlock tests package.
+"""
