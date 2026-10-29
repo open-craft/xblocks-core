@@ -1032,7 +1032,7 @@
     margin-top: 3px;
 }
 
-.xmodule_display.xmodule_ProblemBlock div.problem div div.equation .MathJax_Display {
+.xmodule_display.xmodule_ProblemBlock div.problem div div.equation mjx-container[display] {
     width: auto;
 }
 
@@ -1046,14 +1046,16 @@
     display: inline-block;
 }
 
-.xmodule_display.xmodule_ProblemBlock div.problem div div.equation span.MathJax_CHTML,
-.xmodule_display.xmodule_ProblemBlock div.problem div div.equation span.MathJax,
-.xmodule_display.xmodule_ProblemBlock div.problem div div.equation span.MathJax_SVG {
+.xmodule_display.xmodule_ProblemBlock div.problem div div.equation mjx-container {
     padding: 6px;
     min-width: 30px;
     border: 1px solid #e3e3e3;
     border-radius: 4px;
     background: #f1f1f1;
+}
+
+.xmodule_display.xmodule_ProblemBlock div.problem div div.equation mjx-container:not([display]) {
+    display: inline-block;
 }
 
 @media print {

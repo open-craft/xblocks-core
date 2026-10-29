@@ -493,8 +493,13 @@
         };
 
         DiscussionUtil.typesetMathJax = function(element) {
-            if (typeof MathJax !== 'undefined' && MathJax !== null && typeof MathJax.Hub !== 'undefined') {
-                MathJax.Hub.Queue(['Typeset', MathJax.Hub, element[0]]);
+            // Only startup.promise is checked: MathJax v4 defines typesetPromise once startup finishes,
+            // so requiring it here would skip typesetting when this runs before startup completes.
+            if (typeof MathJax !== 'undefined' && MathJax !== null &&
+                typeof MathJax.startup !== 'undefined' && MathJax.startup !== null &&
+                typeof MathJax.startup.promise !== 'undefined') {
+                MathJax.startup.promise
+                    .then(() => MathJax.typesetPromise([element[0]]));
             }
         };
 

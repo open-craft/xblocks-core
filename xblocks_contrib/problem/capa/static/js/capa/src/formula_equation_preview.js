@@ -169,30 +169,38 @@ formulaEquationPreview.enable = function() {
         }
 
         function display(latex) {
-            MathJax.Hub.Startup.signal.Interest(function(message) {
-                if (message === 'End') {
-                    var previewElement = inputData.$preview[0];
-                    MathJax.Hub.Queue(function() {
-                        inputData.jax = MathJax.Hub.getAllJax(previewElement)[0];
-                    });
-
-                    MathJax.Hub.Queue(function() {
-                        // Check if MathJax is loaded
-                        if (inputData.jax) {
-                            // Set the text as the latex code, and then update the MathJax.
-                            MathJax.Hub.Queue(
-                                ['Text', inputData.jax, latex]
-                            );
-                        } else if (latex) {
-                            console.log('[FormulaEquationInput] Oops no mathjax for ', latex);
-                            // Fall back to modifying the actual element.
-                            var textNode = previewElement.childNodes[0];
-                            textNode.data = '\\(' + latex + '\\)';
-                            MathJax.Hub.Queue(['Typeset', MathJax.Hub, previewElement]);
-                        }
-                    });
+            var previewElement = inputData.$preview[0];
+            // Preserve only span.mathjax-preview and img.loading; drop everything else
+            var mathSpan = previewElement.querySelector('.mathjax-preview');
+            var img = previewElement.querySelector('img.loading');
+            var childNodes = previewElement.childNodes;
+            for (var i = childNodes.length - 1; i >= 0; i--) {
+                var node = childNodes[i];
+                if (node.nodeType !== 1 || (node !== mathSpan && node !== img)) {
+                    previewElement.removeChild(node);
                 }
-            });
+            }
+            if (!mathSpan) {
+                mathSpan = document.createElement('span');
+                mathSpan.className = 'mathjax-preview';
+                if (img) {
+                    previewElement.insertBefore(mathSpan, img);
+                } else {
+                    previewElement.appendChild(mathSpan);
+                }
+            }
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(function() {
+                    MathJax.typesetClear([mathSpan]);
+                    mathSpan.textContent = '\\(' + (latex || '') + '\\)';
+                    return MathJax.typesetPromise([mathSpan]);
+                }).catch(function(err) {
+                    console.log('[FormulaEquationInput] MathJax error for "' + latex + '":', err);
+                });
+            } else if (latex) {
+                console.log('[FormulaEquationInput] Oops no mathjax for ', latex);
+                mathSpan.textContent = '\\(' + latex + '\\)';
+            }
         }
 
         if (response.error) {

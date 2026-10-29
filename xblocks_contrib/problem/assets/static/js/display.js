@@ -57,12 +57,35 @@ Problem.prototype.$ = function (selector) {
   return $(selector, this.el);
 };
 
+// MathJax v3/v4 exposes readiness through startup.promise; typesetPromise is only
+// installed once startup resolves, so callers must chain typeset calls from it.
+const isMathJaxTypesetReady = () => typeof MathJax !== "undefined" && MathJax !== null
+  && MathJax.startup && MathJax.startup.promise;
+const isMathJaxRefreshReady = () => isMathJaxTypesetReady()
+  && typeof MathJax.typesetPromise === "function"
+  && typeof MathJax.typesetClear === "function"
+  && MathJax.startup.document && typeof MathJax.startup.document.getMathItemsWithin === "function";
+const isMathJaxMathMLReady = () => typeof MathJax !== "undefined" && MathJax !== null
+  && MathJax.startup && MathJax.startup.promise && typeof MathJax.startup.toMML === "function";
+// MathJax v3/v4 expose the active input jax on startup.document.inputJax.
+const hasAsciiMathInput = () => {
+  const inputJax = MathJax.startup && MathJax.startup.document && MathJax.startup.document.inputJax;
+  for (let i = 0; inputJax && i < inputJax.length; i++) {
+    if (inputJax[i] && inputJax[i].name === "AsciiMath") {
+      return true;
+    }
+  }
+  return false;
+};
+// Only one warning per page load; AsciiMath is loaded once for the whole page.
+let warnedMissingAsciiMath = false;
+
 Problem.prototype.bind = function () {
   const that = this;
   let problemPrefix;
-  if (typeof MathJax !== "undefined" && MathJax !== null) {
+  if (isMathJaxTypesetReady()) {
     this.el.find(".problem > div").each(function (index, element) {
-      return MathJax.Hub.Queue(["Typeset", MathJax.Hub, element]);
+      return MathJax.startup.promise.then(() => MathJax.typesetPromise([element]));
     });
   }
   if (window.hasOwnProperty("update_schematics")) {
@@ -110,10 +133,11 @@ Problem.prototype.bind = function () {
     this.submitAnswersAndSubmitButton(true);
   }
   Collapsible.setCollapsibles(this.el);
+  // Formula equation inputs use formula_equation_preview.js to manage their server-rendered preview.
   this.$("input.math").keyup(this.refreshMath);
-  if (typeof MathJax !== "undefined" && MathJax !== null) {
+  if (isMathJaxTypesetReady()) {
     this.$("input.math").each(function (index, element) {
-      return MathJax.Hub.Queue([that.refreshMath, null, element]);
+      return MathJax.startup.promise.then(() => that.refreshMath(null, element));
     });
   }
 };
@@ -699,9 +723,9 @@ Problem.prototype.show = function () {
       }
       return results;
     });
-    if (typeof MathJax !== "undefined" && MathJax !== null) {
+    if (isMathJaxTypesetReady()) {
       that.el.find(".problem > div").each(function (index, element) {
-        return MathJax.Hub.Queue(["Typeset", MathJax.Hub, element]);
+        return MathJax.startup.promise.then(() => MathJax.typesetPromise([element]));
       });
     }
     that.el.find(".show").attr("disabled", "disabled");
@@ -754,37 +778,60 @@ Problem.prototype.save_internal = function () {
 };
 
 Problem.prototype.refreshMath = function (event, element) {
-  let elid, eqn, jax, mathjaxPreprocessor, preprocessorTag, target;
   if (!element) {
     element = event.target; // eslint-disable-line no-param-reassign
   }
-  elid = element.id.replace(/^input_/, "");
-  target = `display_${elid}`;
-
-  // MathJax preprocessor is loaded by 'setupInputTypes'
-  preprocessorTag = `inputtype_${elid}`;
-  mathjaxPreprocessor = this.inputtypeDisplays[preprocessorTag];
-  if (typeof MathJax !== "undefined" && MathJax !== null && MathJax.Hub.getAllJax(target)[0]) {
-    jax = MathJax.Hub.getAllJax(target)[0];
-    eqn = $(element).val();
-    if (mathjaxPreprocessor) {
-      eqn = mathjaxPreprocessor(eqn);
-    }
-    MathJax.Hub.Queue(["Text", jax, eqn], [this.updateMathML, jax, element]);
+  const elid = element.id.replace(/^input_/, "");
+  const preprocessor = this.inputtypeDisplays[`inputtype_${elid}`];
+  if (!isMathJaxRefreshReady()) {
+    return;
   }
+  // Use getElementById so IDs with : or . do not break as CSS selectors.
+  const math = document.getElementById(`display_${elid}`);
+  if (!math) {
+    return;
+  }
+  let eqn = $(element).val();
+  if (preprocessor) {
+    eqn = preprocessor(eqn);
+  }
+  MathJax.typesetClear([math]);
+  if (!eqn) {
+    math.textContent = "";
+    const dynEl = document.getElementById(`${element.id}_dynamath`);
+    if (dynEl) { dynEl.value = ""; }
+    return;
+  }
+  const isTexDelimited = (/^\s*\\\(/.test(eqn) && /\\\)\s*$/.test(eqn))
+    || (/^\s*\\\[/.test(eqn) && /\\\]\s*$/.test(eqn))
+    || (/^\s*\$\$/.test(eqn) && /\$\$\s*$/.test(eqn))
+    || (/^\s*\$[^$]/.test(eqn) && /[^$]\$\s*$/.test(eqn));
+  if (!isTexDelimited && !warnedMissingAsciiMath && !hasAsciiMathInput()) {
+    warnedMissingAsciiMath = true;
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[ProblemBlock] MathJax was loaded without the AsciiMath input jax (input/asciimath). " +
+      "Math entered as AsciiMath will not render; add input/asciimath to the MathJax loader.load config."
+    );
+  }
+  math.textContent = isTexDelimited ? eqn : `\`${eqn}\``;
+  MathJax.typesetPromise([math]).then(() => {
+    const jax = MathJax.startup.document.getMathItemsWithin(math)[0];
+    if (jax) {
+      this.updateMathML(jax, element);
+    }
+  }).catch(() => {
+    const dynEl = document.getElementById(`${element.id}_dynamath`);
+    if (dynEl) { dynEl.value = ""; }
+  });
 };
 
 Problem.prototype.updateMathML = function (jax, element) {
-  try {
-    $(`#${element.id}_dynamath`).val(jax.root.toMathML(""));
-  } catch (exception) {
-    if (!exception.restart) {
-      throw exception;
-    }
-    if (typeof MathJax !== "undefined" && MathJax !== null) {
-      MathJax.Callback.After([this.refreshMath, jax], exception.restart);
-    }
+  if (!isMathJaxMathMLReady()) {
+    return;
   }
+  const dynEl = document.getElementById(`${element.id}_dynamath`);
+  if (dynEl) { dynEl.value = MathJax.startup.toMML(jax.root); }
 };
 
 Problem.prototype.refreshAnswers = function () {
@@ -1250,7 +1297,9 @@ Problem.prototype.hint_button = function () {
         const hintMsgContainer = that.$(".problem-hint .notification-message");
         hintContainer.attr("hint_index", response.hint_index);
         edx.HtmlUtils.setHtml(hintMsgContainer, edx.HtmlUtils.HTML(response.msg));
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub, hintContainer[0]]);
+        if (isMathJaxTypesetReady()) {
+          MathJax.startup.promise.then(() => MathJax.typesetPromise([hintContainer[0]]));
+        }
         if (response.should_enable_next_hint) {
           that.hintButton.removeAttr("disabled");
         } else {

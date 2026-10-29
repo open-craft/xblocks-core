@@ -80,23 +80,18 @@ describe('Formula Equation Preview', function() {
                 ajaxTimes.push(Date.now());
             });
 
-        // Spy on MathJax
-        this.jax = 'OUTPUT_JAX';
+        // Spy on MathJax (v3/v4 API)
         this.oldMathJax = window.MathJax;
 
-        window.MathJax = {Hub: {}};
-        window.MathJax.Hub.getAllJax = jasmine.createSpy('MathJax.Hub.getAllJax')
-            .and.returnValue([this.jax]);
-        window.MathJax.Hub.Queue = function(callback) {
-            if (typeof callback === 'function') {
-                callback();
-            }
+        // Synchronous mock promise — .then executes callback immediately like old Hub.Queue
+        var mockPromise = {
+            then: function(callback) { callback(); return this; },
+            catch: function() { return this; }
         };
-        spyOn(window.MathJax.Hub, 'Queue').and.callThrough();
-        window.MathJax.Hub.Startup = jasmine.createSpy('MathJax.Hub.Startup');
-        window.MathJax.Hub.Startup.signal = jasmine.createSpy('MathJax.Hub.Startup.signal');
-        window.MathJax.Hub.Startup.signal.Interest = function(callback) {
-            callback('End');
+        window.MathJax = {
+            startup: { promise: mockPromise },
+            typesetClear: jasmine.createSpy('MathJax.typesetClear'),
+            typesetPromise: jasmine.createSpy('MathJax.typesetPromise')
         };
     });
 
@@ -184,7 +179,7 @@ describe('Formula Equation Preview', function() {
             jasmine.waitUntil(function() {
                 // (Short circuit if `inputAjax` is indeed called)
                 return window.Problem.inputAjax.calls.count() > 0
-                    || window.MathJax.Hub.Queue.calls.count() > 0;
+                    || window.MathJax.typesetPromise.calls.count() > 0;
             }).then(function() {
                 // Expect the request not to have been called.
                 expect(window.Problem.inputAjax).not.toHaveBeenCalled();
@@ -256,8 +251,6 @@ describe('Formula Equation Preview', function() {
         it('updates MathJax and loading icon on callback', function(done) {
             formulaEquationPreview.enable();
 
-            var jax = this.jax;
-
             jasmine.waitUntil(function() {
                 return window.Problem.inputAjax.calls.count() > 0;
             }).then(function() {
@@ -268,21 +261,19 @@ describe('Formula Equation Preview', function() {
                     request_start: args[3].request_start
                 });
 
-                // The only request returned--it should hide the loading icon.
-                expect($('img.loading').css('visibility')).toEqual('hidden');
+                // The only request returned—mathjax-preview span is inserted, img.loading preserved.
+                expect($('img.loading').length).toEqual(1);
 
-                // We should look in the preview div for the MathJax.
+                // Clear and typeset the stable mathjax-preview span.
                 var previewDiv = $('#input_THE_ID_preview')[0];
-                expect(window.MathJax.Hub.getAllJax).toHaveBeenCalledWith(previewDiv);
-
-                // Refresh the MathJax.
-                expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                    ['Text', jax, 'THE_FORMULA']
-                );
+                var mathSpan = previewDiv.querySelector('.mathjax-preview');
+                expect(window.MathJax.typesetClear).toHaveBeenCalledWith([mathSpan]);
+                expect(mathSpan.textContent).toEqual('\\(THE_FORMULA\\)');
+                expect(window.MathJax.typesetPromise).toHaveBeenCalledWith([mathSpan]);
             }).always(done);
         });
 
-        it('finds alternatives if MathJax hasn\'t finished loading', function(done) {
+        it('falls back to text-only when MathJax startup is not ready', function(done) {
             formulaEquationPreview.enable();
             $('#input_THE_ID').val('user_input').trigger('input');
 
@@ -292,8 +283,8 @@ describe('Formula Equation Preview', function() {
                 var args = window.Problem.inputAjax.calls.mostRecent().args;
                 var callback = args[4];
 
-                // Cannot find MathJax.
-                window.MathJax.Hub.getAllJax.and.returnValue([]);
+                // Simulate MathJax startup not ready yet.
+                window.MathJax.startup = null;
                 spyOn(console, 'log');
 
                 callback({
@@ -302,22 +293,23 @@ describe('Formula Equation Preview', function() {
                 });
 
                 // Tests.
-                expect(console.log).toHaveBeenCalled();
-
-                // We should look in the preview div for the MathJax.
-                var previewElement = $('#input_THE_ID_preview')[0];
-                expect(previewElement.firstChild.data).toEqual('\\(THE_FORMULA\\)');
-
-                // Refresh the MathJax.
-                expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                    ['Typeset', jasmine.any(Object), jasmine.any(Element)]
+                expect(console.log).toHaveBeenCalledWith(
+                    '[FormulaEquationInput] Oops no mathjax for ', 'THE_FORMULA'
                 );
+
+                // Preview span should contain the raw LaTeX.
+                var previewElement = $('#input_THE_ID_preview')[0];
+                var mathSpan = previewElement.querySelector('.mathjax-preview');
+                expect(mathSpan.textContent).toEqual('\\(THE_FORMULA\\)');
+
+                // typesetClear/typesetPromise should NOT be called (fallback path).
+                expect(window.MathJax.typesetClear).not.toHaveBeenCalled();
+                expect(window.MathJax.typesetPromise).not.toHaveBeenCalled();
             }).always(done);
         });
 
         it('displays errors from the server well', function(done) {
             var $img = $('img.loading');
-            var jax = this.jax;
 
             formulaEquationPreview.enable();
             jasmine.waitUntil(function() {
@@ -329,16 +321,18 @@ describe('Formula Equation Preview', function() {
                     error: 'OOPSIE',
                     request_start: args[3].request_start
                 });
-                expect(window.MathJax.Hub.Queue).not.toHaveBeenCalled();
+                expect(window.MathJax.typesetClear).not.toHaveBeenCalled();
                 expect($img.css('visibility')).toEqual('visible');
             }).then(function() {
                 jasmine.waitUntil(function() {
-                    return window.MathJax.Hub.Queue.calls.count() > 0;
+                    return window.MathJax.typesetPromise.calls.count() > 0;
                 }).then(function() {
-                    // Refresh the MathJax.
-                    expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                        ['Text', jax, '\\text{OOPSIE}']
-                    );
+                    // Error text should be displayed.
+                    var previewDiv = $('#input_THE_ID_preview')[0];
+                    var mathSpan = previewDiv.querySelector('.mathjax-preview');
+                    expect(window.MathJax.typesetClear).toHaveBeenCalledWith([mathSpan]);
+                    expect(mathSpan.textContent).toEqual('\\(\\text{OOPSIE}\\)');
+                    expect(window.MathJax.typesetPromise).toHaveBeenCalledWith([mathSpan]);
                     expect($img.css('visibility')).toEqual('hidden');
                 }).then(done);
             });
@@ -376,59 +370,70 @@ describe('Formula Equation Preview', function() {
 
         it('updates requests sequentially', function() {
             var $img = $('img.loading');
+            var previewDiv = $('#input_THE_ID_preview')[0];
 
             expect($img.css('visibility')).toEqual('visible');
 
             this.callbacks[0](this.responses[0]);
-            expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                ['Text', this.jax, 'THE_FORMULA_0']
-            );
+            expect(window.MathJax.typesetClear.calls.count()).toEqual(1);
+            expect(window.MathJax.typesetPromise.calls.count()).toEqual(1);
+            var mathSpan = previewDiv.querySelector('.mathjax-preview');
+            expect(mathSpan.textContent).toEqual('\\(THE_FORMULA_0\\)');
             expect($img.css('visibility')).toEqual('visible');
 
             this.callbacks[1](this.responses[1]);
-            expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                ['Text', this.jax, 'THE_FORMULA_1']
-            );
+            expect(window.MathJax.typesetClear.calls.count()).toEqual(2);
+            expect(window.MathJax.typesetPromise.calls.count()).toEqual(2);
+            expect(mathSpan.textContent).toEqual('\\(THE_FORMULA_1\\)');
             expect($img.css('visibility')).toEqual('hidden');
         });
 
         it("doesn't display outdated information", function() {
             var $img = $('img.loading');
+            var previewDiv = $('#input_THE_ID_preview')[0];
 
             expect($img.css('visibility')).toEqual('visible');
 
             // Switch the order (1 returns before 0)
             this.callbacks[1](this.responses[1]);
-            expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                ['Text', this.jax, 'THE_FORMULA_1']
-            );
+            expect(window.MathJax.typesetClear.calls.count()).toEqual(1);
+            expect(window.MathJax.typesetPromise.calls.count()).toEqual(1);
+            var mathSpan = previewDiv.querySelector('.mathjax-preview');
+            expect(mathSpan.textContent).toEqual('\\(THE_FORMULA_1\\)');
             expect($img.css('visibility')).toEqual('hidden');
 
-            window.MathJax.Hub.Queue.calls.reset();
+            window.MathJax.typesetClear.calls.reset();
+            window.MathJax.typesetPromise.calls.reset();
             this.callbacks[0](this.responses[0]);
-            expect(window.MathJax.Hub.Queue).not.toHaveBeenCalled();
+            expect(window.MathJax.typesetClear).not.toHaveBeenCalled();
+            expect(window.MathJax.typesetPromise).not.toHaveBeenCalled();
             expect($img.css('visibility')).toEqual('hidden');
         });
 
         it("doesn't show an error if the responses are close together", function(done) {
+            var previewDiv = $('#input_THE_ID_preview')[0];
+
             this.callbacks[0]({
                 error: 'OOPSIE',
                 request_start: this.responses[0].request_start
             });
-            expect(window.MathJax.Hub.Queue).not.toHaveBeenCalled();
+            expect(window.MathJax.typesetClear).not.toHaveBeenCalled();
 
-            // Error message waiting to be displayed
+            // Error message waiting to be displayed, then a good response arrives first.
             this.callbacks[1](this.responses[1]);
-            expect(window.MathJax.Hub.Queue).toHaveBeenCalledWith(
-                ['Text', this.jax, 'THE_FORMULA_1']
-            );
+            var mathSpan = previewDiv.querySelector('.mathjax-preview');
+            expect(window.MathJax.typesetClear).toHaveBeenCalledWith([mathSpan]);
+            expect(mathSpan.textContent).toEqual('\\(THE_FORMULA_1\\)');
+            expect(window.MathJax.typesetPromise).toHaveBeenCalledWith([mathSpan]);
 
-            // Make sure that it doesn't indeed show up later
-            window.MathJax.Hub.Queue.calls.reset();
+            // Make sure that the error doesn't show up later.
+            window.MathJax.typesetClear.calls.reset();
+            window.MathJax.typesetPromise.calls.reset();
             jasmine.waitUntil(function() {
                 return formulaEquationPreview.errorDelay * 1.1;
             }).then(function() {
-                expect(window.MathJax.Hub.Queue).not.toHaveBeenCalled();
+                expect(window.MathJax.typesetClear).not.toHaveBeenCalled();
+                expect(window.MathJax.typesetPromise).not.toHaveBeenCalled();
             }).then(done);
         });
     });

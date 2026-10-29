@@ -13,8 +13,6 @@
 
     MathJaxDelayRenderer.prototype.maxDelay = 3000;
 
-    MathJaxDelayRenderer.prototype.mathjaxRunning = false;
-
     MathJaxDelayRenderer.prototype.elapsedTime = 0;
 
     MathJaxDelayRenderer.prototype.mathjaxDelay = 0;
@@ -59,8 +57,16 @@
         if (preprocessor != null) {
           text = preprocessor(text);
         }
+        if (typeof MathJax !== 'undefined' && MathJax !== null && typeof MathJax.typesetClear === 'function') {
+          MathJax.typesetClear([$(elem)[0]]);
+        }
         $(elem).html(text); // xss-lint: disable=javascript-jquery-html
-        return MathJax.Hub.Queue(["Typeset", MathJax.Hub, $(elem).attr("id")]);
+        // startup.promise only: MathJax v4 defines typesetPromise when startup finishes.
+        if (typeof MathJax !== 'undefined' && MathJax !== null && MathJax.startup &&
+            MathJax.startup.promise) {
+          return MathJax.startup.promise
+            .then(() => MathJax.typesetPromise([$(elem)[0]]));
+        }
       } else {
         if (this.mathjaxTimeout) {
           window.clearTimeout(this.mathjaxTimeout);
@@ -70,31 +76,38 @@
         renderer = (function(_this) {
           return function() {
             var curTime, prevTime;
-            if (_this.mathjaxRunning) {
-              return;
-            }
             prevTime = getTime();
             if (preprocessor != null) {
               text = preprocessor(text);
             }
+            if (typeof MathJax !== 'undefined' && MathJax !== null && typeof MathJax.typesetClear === 'function') {
+              MathJax.typesetClear([_this.$buffer[0]]);
+            }
             _this.$buffer.html(text); // xss-lint: disable=javascript-jquery-html
             curTime = getTime();
             _this.elapsedTime = curTime - prevTime;
-            if (typeof MathJax !== "undefined" && MathJax !== null) {
+            if (typeof MathJax !== "undefined" && MathJax !== null && MathJax.startup &&
+                MathJax.startup.promise) {
               prevTime = getTime();
-              _this.mathjaxRunning = true;
-              return MathJax.Hub.Queue(["Typeset", MathJax.Hub, _this.$buffer.attr("id")], function() {
-                _this.mathjaxRunning = false;
-                curTime = getTime();
-                _this.mathjaxDelay = curTime - prevTime;
-                if (previewSetter) {
-                  return previewSetter($(_this.$buffer).html());
-                } else {
-                  return $(elem).html($(_this.$buffer).html()); // xss-lint: disable=javascript-jquery-html
-                }
-              });
+              return MathJax.startup.promise
+                .then(
+                  () => MathJax.typesetPromise([_this.$buffer[0]]).then(() => {
+                    curTime = getTime();
+                    _this.mathjaxDelay = curTime - prevTime;
+                    if (previewSetter) {
+                      return previewSetter($(_this.$buffer).html());
+                    } else {
+                      return $(elem).html($(_this.$buffer).html()); // xss-lint: disable=javascript-jquery-html
+                    }
+                  })
+                );
             } else {
-              return _this.mathjaxDelay = 0;
+              _this.mathjaxDelay = 0;
+              if (previewSetter) {
+                return previewSetter($(_this.$buffer).html());
+              } else {
+                return $(elem).html($(_this.$buffer).html()); // xss-lint: disable=javascript-jquery-html
+              }
             }
           };
         })(this);

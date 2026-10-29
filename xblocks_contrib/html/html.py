@@ -191,7 +191,16 @@ class HtmlBlockMixin(LegacyXmlMixin, XBlock):
         """Return a fragment that contains the html for the student view."""
         frag = Fragment(self.get_html())
         frag.add_css(resource_loader.load_unicode("static/css/html.css"))
-        frag.add_javascript("""function HtmlBlock(runtime, element){}""")
+        frag.add_javascript("""
+function HtmlBlock(runtime, element) {
+    if (typeof MathJax !== "undefined" && MathJax !== null &&
+        MathJax.startup && MathJax.startup.promise) {
+        MathJax.startup.promise.then(function() {
+            MathJax.typesetPromise([element]);
+        });
+    }
+}
+""")
         frag.initialize_js("HtmlBlock")
         return frag
 

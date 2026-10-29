@@ -3,13 +3,23 @@ describe("Problem", function () {
   const mockRuntime = {};
 
   beforeEach(function () {
-    // Stub MathJax
+    // Stub MathJax v3/v4 API
     window.MathJax = {
-      Hub: jasmine.createSpyObj("MathJax.Hub", ["getAllJax", "Queue"]),
-      Callback: jasmine.createSpyObj("MathJax.Callback", ["After"]),
+      startup: {
+        promise: { then: function(cb) { cb(); return this; }, catch: function() { return this; } },
+        document: {
+          getMathItemsWithin: jasmine.createSpy("getMathItemsWithin"),
+          inputJax: [{name: "TeX"}, {name: "AsciiMath"}],
+        },
+        toMML: jasmine.createSpy("startup.toMML"),
+      },
+      typesetPromise: jasmine.createSpy("typesetPromise"),
+      typesetClear: jasmine.createSpy("typesetClear"),
     };
-    this.stubbedJax = { root: jasmine.createSpyObj("jax.root", ["toMathML"]) };
-    MathJax.Hub.getAllJax.and.returnValue([this.stubbedJax]);
+    this.stubbedJax = { root: {} };
+    MathJax.startup.document.getMathItemsWithin.and.returnValue([this.stubbedJax]);
+    MathJax.startup.toMML.and.returnValue("<MathML>");
+    MathJax.typesetPromise.and.returnValue(Promise.resolve());
     window.update_schematics = function () {};
     spyOn(SR, "readText");
     spyOn(SR, "readTexts");
@@ -52,11 +62,10 @@ data-url='/problem/quiz/'> \
   describe("bind", function () {
     beforeEach(function () {
       spyOn(window, "update_schematics");
-      MathJax.Hub.getAllJax.and.returnValue([this.stubbedJax]);
       this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
     });
 
-    it("set mathjax typeset", () => expect(MathJax.Hub.Queue).toHaveBeenCalled());
+    it("set mathjax typeset", () => expect(MathJax.typesetPromise).toHaveBeenCalled());
 
     it("update schematics", () => expect(window.update_schematics).toHaveBeenCalled());
 
@@ -83,12 +92,64 @@ data-url='/problem/quiz/'> \
     it("bind the math input", function () {
       expect($("input.math")).toHandleWith("keyup", this.problem.refreshMath);
     });
+
+    it("does not bind refreshMath to formula equation inputs", function () {
+      // Formula-equation inputs are exclusively managed by formula_equation_preview.js.
+      $.ajax.and.callFake(function (settings) {
+        if (settings.url.match(/.+\/problem_get$/)) {
+          settings.success({
+            html: readFixtures("problem_content.html") +
+              '<section class="formulaequationinput"><input type="text" id="input_formula_1" />' +
+              '<div id="input_formula_1_preview" class="equation"></div></section>',
+          });
+        }
+      });
+      this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
+      MathJax.typesetClear.calls.reset();
+      $(".formulaequationinput input").trigger("keyup");
+      expect(MathJax.typesetClear).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("bind while MathJax startup is pending", function () {
+    beforeEach(function () {
+      // MathJax v4 installs typesetPromise only once startup.promise resolves.
+      window.MathJax = {
+        startup: {
+          document: {
+            getMathItemsWithin: jasmine.createSpy("getMathItemsWithin").and.returnValue([{ root: {} }]),
+            inputJax: [{ name: "AsciiMath" }],
+          },
+          toMML: jasmine.createSpy("startup.toMML").and.returnValue("<MathML>"),
+        },
+        typesetClear: jasmine.createSpy("typesetClear"),
+      };
+      window.MathJax.startup.promise = new Promise((resolve) => {
+        this.resolveStartup = () => {
+          MathJax.typesetPromise = jasmine.createSpy("typesetPromise").and.returnValue(Promise.resolve());
+          resolve();
+        };
+      });
+      const content = readFixtures("problem_content.html").replace('value=""', 'value="E=mc^2"');
+      $(".problems-wrapper").data("content", content);
+      this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
+    });
+
+    it("typesets the saved textline math once startup resolves", function (done) {
+      expect(MathJax.typesetPromise).toBeUndefined();
+      expect($("#display_example_1").text()).toBe("");
+      this.resolveStartup();
+      setTimeout(() => {
+        expect(MathJax.typesetPromise).toHaveBeenCalled();
+        expect($("#display_example_1").text()).toBe("`E=mc^2`");
+        done();
+      }, 0);
+    });
   });
 
   describe("bind_with_custom_input_id", function () {
     beforeEach(function () {
       spyOn(window, "update_schematics");
-      MathJax.Hub.getAllJax.and.returnValue([this.stubbedJax]);
       this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
       return $(this).html(readFixtures("problem_content_1240.html"));
     });
@@ -993,18 +1054,39 @@ data-url='/problem/quiz/'> \
       this.problem.refreshMath({ target: $("#input_example_1").get(0) });
     });
 
-    it("should queue the conversion and MathML element update", function () {
-      expect(MathJax.Hub.Queue).toHaveBeenCalledWith(
-        ["Text", this.stubbedJax, "E=mc^2"],
-        [this.problem.updateMathML, this.stubbedJax, $("#input_example_1").get(0)],
-      );
+    it("should trigger MathJax v4 typesetting via typesetClear + typesetPromise", function () {
+      expect(MathJax.typesetClear).toHaveBeenCalled();
+      expect(MathJax.typesetPromise).toHaveBeenCalled();
+      expect($("#display_example_1").text()).toBe("`E=mc^2`");
+    });
+
+    it("preserves backslash-delimited TeX without wrapping in AsciiMath backticks", function () {
+      $("#input_example_1").val("\\\(E=mc^2\\\)");
+      this.problem.refreshMath({ target: $("#input_example_1").get(0) });
+      expect($("#display_example_1").text()).toBe("\\\(E=mc^2\\\)");
+    });
+  });
+
+  describe("refreshMath without the AsciiMath input jax", function () {
+    beforeEach(function () {
+      MathJax.startup.document.inputJax = [];
+      spyOn(window.console, "warn");
+      this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
+      $("#input_example_1").val("E=mc^2");
+      this.problem.refreshMath({ target: $("#input_example_1").get(0) });
+      this.problem.refreshMath({ target: $("#input_example_1").get(0) });
+    });
+
+    it("warns once about input/asciimath and still wraps in AsciiMath backticks", function () {
+      expect(window.console.warn.calls.count()).toBe(1);
+      expect(window.console.warn.calls.argsFor(0)[0]).toContain("input/asciimath");
+      expect($("#display_example_1").text()).toBe("`E=mc^2`");
     });
   });
 
   describe("updateMathML", function () {
     beforeEach(function () {
       this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
-      this.stubbedJax.root.toMathML.and.returnValue("<MathML>");
     });
 
     describe("when there is no exception", function () {
@@ -1012,19 +1094,9 @@ data-url='/problem/quiz/'> \
         this.problem.updateMathML(this.stubbedJax, $("#input_example_1").get(0));
       });
 
-      it("convert jax to MathML", () => expect($("#input_example_1_dynamath")).toHaveValue("<MathML>"));
-    });
-
-    describe("when there is an exception", function () {
-      beforeEach(function () {
-        const error = new Error();
-        error.restart = true;
-        this.stubbedJax.root.toMathML.and.throwError(error);
-        this.problem.updateMathML(this.stubbedJax, $("#input_example_1").get(0));
-      });
-
-      it("should queue up the exception", function () {
-        expect(MathJax.Callback.After).toHaveBeenCalledWith([this.problem.refreshMath, this.stubbedJax], true);
+      it("convert jax to MathML via startup.toMML", function () {
+        expect(MathJax.startup.toMML).toHaveBeenCalledWith(this.stubbedJax.root);
+        expect($("#input_example_1_dynamath")).toHaveValue("<MathML>");
       });
     });
   });
