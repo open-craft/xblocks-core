@@ -44,6 +44,7 @@ dependencies = [
     "oauthlib",
     "openedx-calc",
     "path",
+    "pydantic",
     "pyparsing",
     "pytz",
     "random2",
@@ -71,6 +72,9 @@ _word_cloud_extracted = "xblock_word_cloud:WordCloudBlock"
 # 'Done' XBlocks -- ones that are ready for general use today,
 # and have been migrated fully from edx-platform or their original repository.
 pdf = "xblock_pdf:PDFBlock"
+# These are prefixed to avoid conflicting with existing community blocks.
+openedx_flashcards = "xblock_flashcards:FlashcardsXBlock"
+openedx_matching = "xblock_matching:MatchingXBlock"
 
 [project.entry-points."lms.djangoapp"]
 xblock_problem_capa = "xblock_problem.capa.apps:CapaAppConfig"
@@ -87,6 +91,7 @@ test-base = [
     "pytest-cov",
     "pytest-django",
     "six",
+    "faker",
 ]
 # Current default Django version. When adding or retiring a Django version
 # from the matrix, update this group and [tool.uv].conflicts accordingly.
@@ -117,6 +122,7 @@ dev = [
     { include-group = "quality" },
     { include-group = "ci" },
     { include-group = "doc" },
+    "edx-i18n-tools",
 ]
 
 [tool.setuptools_scm]
@@ -175,14 +181,13 @@ indent-style = "space"
 DJANGO_SETTINGS_MODULE = "test_settings"
 django_find_project = false
 pythonpath = [".", "src"]
-addopts = "--cov src --cov-report term-missing --cov-report xml"
+addopts = "--cov src --cov-report term-missing --cov-report xml --cov-report html"
 norecursedirs = [".*", "build", "docs", "requirements", "site-packages"]
 
 [tool.coverage.run]
 branch = true
 source = ["src"]
 omit = [
-    "*/tests/*",
     "*/migrations/*",
     "*/__pycache__/*",
     "*/settings.py",
