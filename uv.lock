@@ -123,7 +123,7 @@ name = "cffi"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz", hash = "sha256:dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be", size = 530807, upload-time = "2026-08-03T21:21:18.939Z" }
 wheels = [
@@ -562,7 +562,7 @@ name = "cryptography"
 version = "50.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9d/af/182eb91b0df3fe75c4d9f26fe70684569566745f6ba7e5c9c73a862c5252/cryptography-50.0.2.tar.gz", hash = "sha256:7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5", size = 880623, upload-time = "2026-09-30T15:30:04.884Z" }
 wheels = [
@@ -683,9 +683,9 @@ resolution-markers = [
     "python_full_version < '3.13'",
 ]
 dependencies = [
-    { name = "asgiref" },
-    { name = "sqlparse" },
-    { name = "tzdata", marker = "(sys_platform == 'win32' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "asgiref", marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sqlparse", marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "tzdata", marker = "(sys_platform == 'win32' and extra == 'group-15-xblocks-contrib-dev') or (sys_platform == 'win32' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/85/fe/79e692b430c7721bf4b812c328bfe687e73e3f28f56611a6a18a97e887cc/django-5.2.18.tar.gz", hash = "sha256:461c5dd06d2ea16bd5ca37d3f46e4def1d6b0fe7588c6f4e2119517bb0af8b2d", size = 10910238, upload-time = "2026-10-06T13:01:09.371Z" }
 wheels = [
@@ -698,7 +698,7 @@ version = "0.7.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/34/1d/c56588f67130aeef8828e47535e8551337d2ae02f91f1414da61bc5e49fb/django-crum-0.7.9.tar.gz", hash = "sha256:65e9bc0f070a663fafc4d9e357f45fd4e6f01838b20a9e2fb7670f5706754288", size = 5168, upload-time = "2020-11-10T17:15:35.124Z" }
 wheels = [
@@ -711,7 +711,7 @@ version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/81/60/5e232c32a2c977cc1af8c70a38ef436598bc649ad89c2c4568454edde2c9/django_model_utils-5.0.0.tar.gz", hash = "sha256:041cdd6230d2fbf6cd943e1969318bce762272077f4ecd333ab2263924b4e5eb", size = 80559, upload-time = "2024-09-04T11:35:22.858Z" }
 wheels = [
@@ -724,7 +724,7 @@ version = "1.14.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ff/d6/2e50e378fff0408d558f36c4acffc090f9a641fd6e084af9e54d45307efa/django_storages-1.14.6.tar.gz", hash = "sha256:7a25ce8f4214f69ac9c7ce87e2603887f7ae99326c316bc8d2d75375e09341c9", size = 87587, upload-time = "2025-04-02T02:34:55.103Z" }
 wheels = [
@@ -737,7 +737,7 @@ version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/22/e1/6f533da0d4ac89f427dfd9410e39bfc14ae3a23335ecd549d76be4b2a834/django_waffle-5.0.0.tar.gz", hash = "sha256:62f9d00eedf68dafb82657beab56e601bddedc1ea1ccfef91d83df8658708509", size = 37761, upload-time = "2025-06-12T07:38:54.895Z" }
 wheels = [
@@ -769,7 +769,7 @@ resolution-markers = [
     "python_full_version < '3.13'",
 ]
 dependencies = [
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/8d/b2/1cee76b188301f7d03169ca77fab2b3d3ec5d01b3469189f944af2d7f11a/djangorestframework-3.18.3.tar.gz", hash = "sha256:446a9b352e7eff630421ab3f2328bd2401b109a9470afa4a31189994911ed030", size = 923563, upload-time = "2026-10-06T21:33:51.521Z" }
 wheels = [
@@ -815,9 +815,9 @@ version = "1.19.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "djangorestframework", version = "3.17.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "djangorestframework", version = "3.18.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "djangorestframework", version = "3.18.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "pyjwt", extra = ["crypto"] },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/19/8e/3c60992bafd0ac51bcfa136ff9f5e1cff65ef45ebbcb393477672e699e82/drf-jwt-1.19.2.tar.gz", hash = "sha256:660bc66f992065cef59832adcbbdf871847e9738671c19e5121971e773768235", size = 38208, upload-time = "2022-01-09T09:23:38.903Z" }
@@ -843,7 +843,7 @@ version = "1.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "pyyaml" },
     { name = "six" },
 ]
@@ -859,7 +859,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "django-crum" },
     { name = "django-waffle" },
     { name = "psutil" },
@@ -877,10 +877,10 @@ version = "10.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "django-waffle" },
     { name = "djangorestframework", version = "3.17.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "djangorestframework", version = "3.18.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "djangorestframework", version = "3.18.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "drf-jwt" },
     { name = "edx-django-utils" },
     { name = "edx-opaque-keys" },
@@ -891,6 +891,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/57/e922d5dd4db8682f1f3e0e4c36c2a7a68c6c014fb6357393514587a183d1/edx_drf_extensions-10.9.0.tar.gz", hash = "sha256:cdd588a055a018c0b368932aeb1763e4bff7b0d8ce6e0b06eadd2d56a1d7f136", size = 100356, upload-time = "2026-09-15T16:55:26.453Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/b3/e3f293cc88f78b6fd26d9720f498a4d950c1ecc133b86512da890eae856b/edx_drf_extensions-10.9.0-py2.py3-none-any.whl", hash = "sha256:d8d4f7925c2cff43f71f6142bbc90674bea906136752fdae4984755b941e4d81", size = 103131, upload-time = "2026-09-15T16:55:25.209Z" },
+]
+
+[[package]]
+name = "edx-i18n-tools"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" } },
+    { name = "lxml", extra = ["html-clean"], marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "path" },
+    { name = "polib" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d4/4d/7ab2bfbf4c9a641a912c701d25400d6181aa211cfda056be2605b51baf2a/edx_i18n_tools-2.1.0.tar.gz", hash = "sha256:5d6613f21d4ac5644a4c6fa6526ef7335cf25c0b0cbb7d0ad72c53aa4d6dacca", size = 81888, upload-time = "2026-10-01T14:26:06.23Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/b7/c97f43c0baaa178f1a8305f4ec6638bc8d672b60f974756737acc1965a76/edx_i18n_tools-2.1.0-py3-none-any.whl", hash = "sha256:910949ae9e20230f59a50fac2edaf1c2493b8445921d971bb5c2405fd4cff800", size = 32876, upload-time = "2026-10-01T14:26:04.633Z" },
 ]
 
 [[package]]
@@ -932,10 +948,10 @@ version = "4.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "django-model-utils" },
     { name = "djangorestframework", version = "3.17.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "djangorestframework", version = "3.18.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "djangorestframework", version = "3.18.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "edx-django-release-util" },
     { name = "jsonfield" },
     { name = "pytz" },
@@ -952,7 +968,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "code-annotations" },
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "django-crum" },
     { name = "django-waffle" },
     { name = "edx-django-utils" },
@@ -969,7 +985,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "django-model-utils" },
     { name = "django-storages" },
     { name = "edx-django-release-util" },
@@ -982,6 +998,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6a/52/e9ec3bd9239c25b1fe63aec4c84d682dde1cfa8f6af939fbfd91f2ddea9d/edxval-5.0.1.tar.gz", hash = "sha256:8181ed6a81f8fa4ccea41c58fbb236ec1c18ae70261e837d8a274b026664d482", size = 81607, upload-time = "2026-06-25T13:39:40.184Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/ee/09ee25917b9b38778d84f98f50ad6d627d999f55ed067633fe72a7ac8bfd/edxval-5.0.1-py3-none-any.whl", hash = "sha256:8a8e014b372008598e329afa33cdcb0f389ebfd76cf5134c31b8ffac08081875", size = 86974, upload-time = "2026-06-25T13:39:39.313Z" },
+]
+
+[[package]]
+name = "faker"
+version = "40.44.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/22/965c7b822f4c80f6e003c696d5fa01b48eea6cc7852d61aec8779519b346/faker-40.44.0.tar.gz", hash = "sha256:97245a3756dcaf35418b89bea9f03ae6881557db0032bf048744c2aaee2a9108", size = 2034259, upload-time = "2026-10-28T17:06:41.048Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/58/9e/3da962809aefa00ddf457d1b11bba41d7766373a0ad9e537fa0804604361/faker-40.44.0-py3-none-any.whl", hash = "sha256:db808a3ec33fe9ce5caf40b9fb61f85f46e429a56966f765209272adec83e4c6", size = 2069747, upload-time = "2026-10-28T17:06:39.109Z" },
 ]
 
 [[package]]
@@ -1116,7 +1144,7 @@ version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fa/e9/537e105246dba81d898853dbbe17eb3edd23d47a35074b99fd4add6f1662/jsonfield-3.2.0.tar.gz", hash = "sha256:ca53871bc3308ae4f4cddc3b4f99ed5c6fc6abb1832fbfb499bc6da566c70e4a", size = 17156, upload-time = "2025-07-04T23:06:24.883Z" }
 wheels = [
@@ -1240,6 +1268,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/d7/ed6ee6186a89e69ca4ea9658b2a278f46a5efe8b5d4db56c7197f18653fe/lxml-6.1.3-cp315-cp315t-win32.whl", hash = "sha256:ace1d2c83b2bd24db5940600541140e87a325e119cb32d5fa9ad720d7e76648e", size = 3901093, upload-time = "2026-09-02T14:51:37.234Z" },
     { url = "https://files.pythonhosted.org/packages/67/9d/11d10257a4a048d04195d638bb61f0246ce2448eb05f682bcbab25a257a8/lxml-6.1.3-cp315-cp315t-win_amd64.whl", hash = "sha256:b49638355ea3bebba70da783ccbc630fd72afa16bc46c54474bfa1f9a915bbc6", size = 4395446, upload-time = "2026-09-02T14:51:39.884Z" },
     { url = "https://files.pythonhosted.org/packages/f8/b7/44edd7de434181c582892e68d1ffe6775ca403ce14aea07cb5a218a936cf/lxml-6.1.3-cp315-cp315t-win_arm64.whl", hash = "sha256:5a721a98c649855963811b59b55755b30566e7f7fc40bdc9803d66dee9f811cf", size = 3822836, upload-time = "2026-09-02T14:51:42.471Z" },
+]
+
+[package.optional-dependencies]
+html-clean = [
+    { name = "lxml-html-clean" },
+]
+
+[[package]]
+name = "lxml-html-clean"
+version = "0.4.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lxml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ac/7e/2b7118b28d5bb69dfc4f349e1ca92334cf986601d3c809caa62cfa3bfab6/lxml_html_clean-0.4.6.tar.gz", hash = "sha256:ea9db067c3053854fd87f8d5a1cf01221dc893b54dbf6019c689052e05c64f22", size = 26385, upload-time = "2026-10-26T11:14:45.978Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/36/4898b5e3951635846ed0e445e042fadf02b7c5e811a9e43da5b3557bc8d2/lxml_html_clean-0.4.6-py3-none-any.whl", hash = "sha256:cc037270ba500a65e7235409dcddcae8ef37300f26dea826b61d917bf0236880", size = 14952, upload-time = "2026-10-26T11:14:44.73Z" },
 ]
 
 [[package]]
@@ -1656,6 +1701,15 @@ wheels = [
 ]
 
 [[package]]
+name = "polib"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/9a/79b1067d27e38ddf84fe7da6ec516f1743f31f752c6122193e7bce38bdbf/polib-1.2.0.tar.gz", hash = "sha256:f3ef94aefed6e183e342a8a269ae1fc4742ba193186ad76f175938621dbfc26b", size = 161658, upload-time = "2023-02-23T17:53:56.873Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6b/99/45bb1f9926efe370c6dbe324741c749658e44cb060124f28dad201202274/polib-1.2.0-py2.py3-none-any.whl", hash = "sha256:1c77ee1b81feb31df9bca258cbc58db1bbb32d10214b173882452c73af06d62d", size = 20634, upload-time = "2023-02-23T17:53:59.919Z" },
+]
+
+[[package]]
 name = "psutil"
 version = "7.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1704,8 +1758,8 @@ dependencies = [
     { name = "jinja2" },
     { name = "pygments" },
     { name = "requests" },
-    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
-    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ae/8e/add936feaaa9dade7d5b87c6852566d85e518b38ad32224dea32ef958984/pydata_sphinx_theme-0.20.0.tar.gz", hash = "sha256:0da172d41e19a66de875f4002f7054b385372ec65763852193791e658d50bb4a", size = 5004756, upload-time = "2026-07-09T09:09:14.693Z" }
 wheels = [
@@ -1865,7 +1919,7 @@ name = "pynacl"
 version = "1.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d9/9a/4019b524b03a13438637b11538c82781a5eda427394380381af8f04f467a/pynacl-1.6.2.tar.gz", hash = "sha256:018494d6d696ae03c7e656e5e74cdfd8ea1326962cc401bcf018f1ed8436811c", size = 3511692, upload-time = "2026-01-01T17:48:10.851Z" }
 wheels = [
@@ -1930,7 +1984,7 @@ name = "pytest"
 version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
@@ -2572,8 +2626,8 @@ version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydata-sphinx-theme" },
-    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
-    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e9/8a/cb008736682b3974cae6925c54939792fe56f5a167e37984cb45d8a85d8a/sphinx_book_theme-1.4.0.tar.gz", hash = "sha256:fee3cd70573d9a8cd4ab380a3cb1f11139c24dcaa2cf47d06d7f924f1b44eaff", size = 406113, upload-time = "2026-07-19T21:23:54.183Z" }
 wheels = [
@@ -2705,7 +2759,7 @@ dependencies = [
     { name = "pyproject-api" },
     { name = "python-discovery" },
     { name = "tomli-w" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "virtualenv" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/63/6e/677274ae411fa13f5c2ea5c633a6abfa0886e949bd2ef53c7e564a0b0b2e/tox-4.67.1.tar.gz", hash = "sha256:a68602f64421b199016127364ee47347b958391d19c2b2e53fe95673a8fe98e9", size = 347211, upload-time = "2026-10-18T07:34:04.348Z" }
@@ -2743,7 +2797,7 @@ name = "tqdm"
 version = "4.70.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0d/ea/b2a5bd54b28a324dae8211928b2d730b6547500342c7e6c6dea08bd0a485/tqdm-4.70.1.tar.gz", hash = "sha256:cefd0eca11b2a37a3aee776544d4f4ae913f02688135b5556b8788dfa474afc4", size = 171846, upload-time = "2026-09-11T07:25:16.601Z" }
 wheels = [
@@ -2833,7 +2887,7 @@ name = "webob"
 version = "1.8.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "legacy-cgi", marker = "python_full_version >= '3.13'" },
+    { name = "legacy-cgi", marker = "python_full_version >= '3.13' or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e6/92/9329872e36be90e25ba616ac6e9ee8c1be4326a1ea3fdffcdabd0eb48efb/webob-1.8.11.tar.gz", hash = "sha256:aa8c27231070b135c025e567a9cd7eda03f4df71352ffaac740cb6a75f0f81a5", size = 286047, upload-time = "2026-08-02T06:26:26.063Z" }
 wheels = [
@@ -2942,9 +2996,10 @@ source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "chem" },
+    { name = "cryptography" },
     { name = "defusedxml" },
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-django42'" },
-    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or extra == 'group-15-xblocks-contrib-doc' or extra == 'group-15-xblocks-contrib-quality' or extra == 'group-15-xblocks-contrib-test'" },
+    { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-15-xblocks-contrib-dev' or extra != 'group-15-xblocks-contrib-django42' or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "edx-codejail" },
     { name = "edx-django-utils" },
     { name = "edx-opaque-keys" },
@@ -2980,14 +3035,16 @@ dev = [
     { name = "ddt" },
     { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" } },
     { name = "doc8" },
+    { name = "edx-i18n-tools" },
     { name = "edx-lint" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "ruff" },
     { name = "six" },
-    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
-    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "sphinx-book-theme" },
     { name = "tox" },
     { name = "tox-uv" },
@@ -2995,6 +3052,7 @@ dev = [
 django42 = [
     { name = "ddt" },
     { name = "django", version = "4.2.30", source = { registry = "https://pypi.org/simple" } },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3004,18 +3062,20 @@ doc = [
     { name = "ddt" },
     { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" } },
     { name = "doc8" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "six" },
-    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
-    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version < '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
+    { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and extra == 'group-15-xblocks-contrib-dev') or (python_full_version >= '3.13' and extra != 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-dev' and extra == 'group-15-xblocks-contrib-django42') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-doc') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-quality') or (extra == 'group-15-xblocks-contrib-django42' and extra == 'group-15-xblocks-contrib-test')" },
     { name = "sphinx-book-theme" },
 ]
 quality = [
     { name = "ddt" },
     { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" } },
     { name = "edx-lint" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3025,6 +3085,7 @@ quality = [
 test = [
     { name = "ddt" },
     { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" } },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3032,6 +3093,7 @@ test = [
 ]
 test-base = [
     { name = "ddt" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3042,6 +3104,7 @@ test-base = [
 requires-dist = [
     { name = "beautifulsoup4" },
     { name = "chem" },
+    { name = "cryptography" },
     { name = "defusedxml" },
     { name = "django", specifier = ">=4.2" },
     { name = "edx-codejail" },
@@ -3079,7 +3142,9 @@ dev = [
     { name = "ddt" },
     { name = "django", specifier = ">=5.2,<6.0" },
     { name = "doc8" },
+    { name = "edx-i18n-tools" },
     { name = "edx-lint" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3093,6 +3158,7 @@ dev = [
 django42 = [
     { name = "ddt" },
     { name = "django", specifier = ">=4.2,<5.0" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3102,6 +3168,7 @@ doc = [
     { name = "ddt" },
     { name = "django", specifier = ">=5.2,<6.0" },
     { name = "doc8" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3113,6 +3180,7 @@ quality = [
     { name = "ddt" },
     { name = "django", specifier = ">=5.2,<6.0" },
     { name = "edx-lint" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3122,6 +3190,7 @@ quality = [
 test = [
     { name = "ddt" },
     { name = "django", specifier = ">=5.2,<6.0" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -3129,6 +3198,7 @@ test = [
 ]
 test-base = [
     { name = "ddt" },
+    { name = "faker" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-django" },

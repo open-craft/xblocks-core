@@ -1,0 +1,113 @@
+{% load i18n %}
+<link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+
+{{ pages_json|json_script:"matching-pages-data" }}
+
+<div class='gamesxblock gamesxblock-matching' data-timed="{{ has_timer|yesno:'true,false' }}">
+    <div class="sr-only" aria-live="assertive" aria-atomic="true" role="alert" id="matching-sr-announcements"></div>
+    <header class="matching-header">
+        <h1 class="matching-title">{{title}}</h1>
+    </header>
+
+    <div class="matching-start-screen">
+        <h3 class="matching-start-title">{% trans "Match each term with the correct definition" %}</h3>
+        <button class="matching-start-button" {% if list_length <= 0 %}disabled{% endif %}>{% trans "Start" %}</button>
+        <div class="matching-loading-spinner" aria-hidden="true">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <main id="main-content-{{block_id}}" tabindex="-1">
+    <div class="matching-grid">
+        <!-- Left Column (mixed when shuffled) -->
+        <div class="matching-column matching-column-left">
+            {% if all_pages %}
+                {% for item in all_pages.0.left_items %}
+                <div class="matching-box-wrapper">
+                    <div class="matching-box" data-item-type="term" data-match="{{item.match}}"
+                         title="{{item.text}}" role="button" tabindex="0">
+                        <span class="matching-box-text">{{item.text}}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Right Column (mixed when shuffled) -->
+        <div class="matching-column matching-column-right">
+            {% if all_pages %}
+                {% for item in all_pages.0.right_items %}
+                <div class="matching-box-wrapper">
+                    <div class="matching-box" data-item-type="definition" data-hash="{{item.hash}}"
+                         title="{{item.text}}" role="button" tabindex="0">
+                        <span class="matching-box-text">{{item.text}}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    </main>
+
+    <div class="matching-footer">
+        <div class="matching-progress-wrapper">
+            {% if total_pages > 1 %}
+            <svg class="matching-progress-circle" xmlns="http://www.w3.org/2000/svg" width="55" height="55" viewBox="0 0 55 55" fill="none" aria-hidden="true">
+                <circle class="matching-progress-bg" cx="27.0213" cy="27.0213" r="25.0213" stroke-width="4" />
+                <circle class="matching-progress-bar" cx="27.0213" cy="27.0213" r="25.0213" stroke-width="4" />
+            </svg>
+            <div class="matching-progress-text"><span id="matching-progress-count">0</span>/{{total_pages}}</div>
+            {% endif %}
+        </div>
+        {% if has_timer %}
+        <div class="matching-timer" id="matching-timer">0:00</div>
+        {% endif %}
+        <div class="matching-help-wrapper">
+            <div class="matching-help-icon" id="matching-help" aria-label="{% trans 'Help' %}" role="button" tabindex="0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M9 16H11V14H9V16ZM10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM10 18C5.59 18 2 14.41 2 10C2 5.59 5.59 2 10 2C14.41 2 18 5.59 18 10C18 14.41 14.41 18 10 18ZM10 4C7.79 4 6 5.79 6 8H8C8 6.9 8.9 6 10 6C11.1 6 12 6.9 12 8C12 10 9 9.75 9 13H11C11 10.75 14 10.5 14 8C14 5.79 12.21 4 10 4Z" fill="#00262B"/>
+                </svg>
+            </div>
+            <div class="help-popover">
+                <div class="help-popover-content">
+                    {% trans "Match each term with the correct definition" %}
+                </div>
+                <div class="help-popover-arrow"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="matching-end-screen">
+        <div class="confetti-container"></div>
+        <div class="matching-end-screen-content" tabindex="-1" role="region" aria-label="{% trans 'Game results' %}">
+            <h1 class="matching-end-title">{% trans "Congratulations!" %}</h1>
+            <div class="matching-new-best">
+                <h1 class="matching-new-end-title" id="matching-current-result">0:00</h1>
+                <div class="matching-new-end-subtitle">{% trans "A new personal best!" %}</div>
+                <div class="matching-new-prev-best">{% trans "Previous best:" %} <span id="matching-prev-best">0:00</span></div>
+            </div>
+            <div class="matching-prev-best">
+                <div class="matching-prev-best-subtitle">
+                    {% trans "You completed the matching game in " %}
+                    <span id="matching-prev-current-best-time">0:00</span>
+                    <br/>
+                    {% trans "Keep up the good work!" %}
+                </div>
+                <div class="matching-prev-best-time">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21" fill="none">
+                        <path d="M18.6667 2.33333H16.3333V0H4.66667V2.33333H2.33333C1.05 2.33333 0 3.38333 0 4.66667V5.83333C0 8.80833 2.24 11.235 5.12167 11.5967C5.85667 13.3467 7.43167 14.665 9.33333 15.05V18.6667H4.66667V21H16.3333V18.6667H11.6667V15.05C13.5683 14.665 15.1433 13.3467 15.8783 11.5967C18.76 11.235 21 8.80833 21 5.83333V4.66667C21 3.38333 19.95 2.33333 18.6667 2.33333ZM2.33333 5.83333V4.66667H4.66667V9.12333C3.31333 8.63333 2.33333 7.35 2.33333 5.83333ZM18.6667 5.83333C18.6667 7.35 17.6867 8.63333 16.3333 9.12333V4.66667H18.6667V5.83333Z" fill="black"/>
+                    </svg>
+                    <span>{% trans "Your personal best" %}</span>
+                    <span id="matching-personal-best-time">0:00</span>
+                </div>
+            </div>
+            <div class="matching-non-timer">
+                <div class="matching-non-timer-subtitle">
+                    {% trans "You successfully matched all items." %}<br/>
+                    {% trans "Keep up the good work!" %}
+                </div>
+            </div>
+            <button class="matching-end-button">{% trans "Play again" %}</button>
+        </div>
+    </div>
+</div>

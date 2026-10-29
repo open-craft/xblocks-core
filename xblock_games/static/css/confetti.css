@@ -1,0 +1,31 @@
+/* Confetti Animation System */
+
+@keyframes confetti {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translate(var(--confetti-x), var(--confetti-y)) rotate(720deg);
+        opacity: 1;
+    }
+}
+
+.confetti {
+    position: absolute;
+    bottom: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+}
+
+.confetti-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}

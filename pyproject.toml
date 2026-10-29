@@ -27,6 +27,7 @@ requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4",
     "chem",
+    "cryptography",
     "defusedxml",
     "django>=4.2",
     "edx-codejail",
@@ -71,6 +72,7 @@ _word_cloud_extracted = "xblocks_contrib:WordCloudBlock"
 # 'Done' XBlocks -- ones that are ready for general use today,
 # and have been migrated fully from edx-platform or their original repository.
 pdf = "xblock_pdf:PDFBlock"
+games = "xblock_games:GamesXBlock"
 
 [project.entry-points."lms.djangoapp"]
 xblocks_contrib_problem_capa = "xblocks_contrib.problem.capa.apps:CapaAppConfig"
@@ -87,6 +89,7 @@ test-base = [
     "pytest-cov",
     "pytest-django",
     "six",
+    "faker",
 ]
 # Current default Django version. When adding or retiring a Django version
 # from the matrix, update this group and [tool.uv].conflicts accordingly.
@@ -117,6 +120,7 @@ dev = [
     { include-group = "quality" },
     { include-group = "ci" },
     { include-group = "doc" },
+    "edx-i18n-tools",
 ]
 
 [tool.setuptools_scm]
@@ -127,7 +131,7 @@ local_scheme = "no-local-version"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["xblocks_contrib*", "xblock_pdf*"]
+include = ["xblocks_contrib*", "xblock_pdf*", "xblock_games*"]
 exclude = ["*tests*"]
 
 [tool.setuptools.exclude-package-data]
@@ -174,7 +178,7 @@ indent-style = "space"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "test_settings"
 django_find_project = false
-addopts = "--cov xblocks_contrib --cov xblock_pdf --cov-report term-missing --cov-report xml"
+addopts = "--cov xblocks_contrib --cov xblock_pdf --cov xblock_games --cov-report term-missing --cov-report xml"
 norecursedirs = [".*", "docs", "requirements", "site-packages"]
 
 [tool.coverage.run]
@@ -182,6 +186,7 @@ branch = true
 source = [
     "xblocks_contrib",
     "xblock_pdf",
+    "xblock_games",
 ]
 omit = [
     "*/tests/*",

@@ -26,6 +26,7 @@ These are the XBlocks being moved here, and each of their statuses:
 * ``discussion`` -- Ready to Use
 * ``problem`` -- Ready to Use
 * ``video`` -- Ready to Use
+* ``games`` -- In Development
 
 The possible XBlock statuses are:
 

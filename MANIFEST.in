@@ -4,6 +4,7 @@ include LICENSE.txt README.rst
 # --- PACKAGE DATA ---
 recursive-include xblocks_contrib *.html *.js *.css *.jar *.png *.gif *.jpg *.jpeg *.svg *.yaml *.underscore
 recursive-include xblock_pdf *.html *.js *.css
+recursive-include xblock_games *.html *.js *.css
 
 # --- EXCLUSIONS ---
 # Prevent raw frontend source files and node_modules from bloating the Python wheel.
@@ -12,7 +13,7 @@ prune xblocks_contrib/*/node_modules
 global-exclude webpack*.config.js karma*.js package*.json package-lock.json .gitignore
 
 # Exclude top-level tests and JS specs by default to keep the distribution size small.
-# NOTE: The `*` here only looks one directory deep (e.g., `foo/tests`). 
+# NOTE: The `*` here only looks one directory deep (e.g., `foo/tests`).
 prune */tests
 prune */spec
 
