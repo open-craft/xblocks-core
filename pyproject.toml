@@ -27,7 +27,6 @@ requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4",
     "chem",
-    "cryptography",
     "defusedxml",
     "django>=4.2",
     "edx-codejail",

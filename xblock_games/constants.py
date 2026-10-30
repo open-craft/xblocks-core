@@ -57,7 +57,5 @@ class UPLOAD:
 class CONFIG:
     """Configuration values."""
 
-    RANDOM_STRING_LENGTH = 8
     SALT_LENGTH = 12  # Length of random salt added to obfuscated payloads
     MATCHES_PER_PAGE = 5  # Number of matches displayed per page
-    ENCRYPTION_SALT = "gamesxblock_secure_salt_v1"  # Salt for encryption key generation

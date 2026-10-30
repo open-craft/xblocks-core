@@ -2,19 +2,16 @@
 Common handler methods for the Games XBlock.
 """
 
-import base64
 import hashlib
-import json
 import random
 import string
 import uuid
 
-from cryptography.fernet import Fernet
 from django.core.files.base import ContentFile
 from django.utils.translation import gettext as _
 from xblock.core import Response
 
-from ..constants import CARD_FIELD, CONFIG, DEFAULT, GAME_TYPE, UPLOAD
+from ..constants import CARD_FIELD, DEFAULT, GAME_TYPE, UPLOAD
 from ..utils import delete_image, get_gamesxblock_storage
 
 
@@ -41,62 +38,6 @@ class CommonHandlers:
                     "Consider increasing min_len/max_len."
                 )
         return names
-
-    @staticmethod
-    def generate_encryption_key(xblock):
-        """
-        Generate encryption key using block_id and salt.
-        Uses a consistent identifier that doesn't change across requests.
-
-        Args:
-            xblock: The xblock instance
-
-        Returns:
-            Base64-encoded encryption key (bytes)
-        """
-        # Use block_id (which is stable) and the encryption salt
-        block_id = str(xblock.scope_ids.usage_id.block_id)
-        seed_string = f"{block_id}:{CONFIG.ENCRYPTION_SALT}"
-
-        # Generate a 32-byte key using SHA-256
-        key_bytes = hashlib.sha256(seed_string.encode()).digest()
-
-        # Fernet requires base64-encoded 32-byte key
-        return base64.urlsafe_b64encode(key_bytes)
-
-    @staticmethod
-    def encrypt_data(data, encryption_key):
-        """
-        Encrypt data using Fernet (symmetric encryption).
-
-        Args:
-            data: Dictionary or any JSON-serializable data to encrypt
-            encryption_key: Base64-encoded encryption key
-
-        Returns:
-            Base64-encoded encrypted string
-        """
-        fernet = Fernet(encryption_key)
-        data_json = json.dumps(data)
-        encrypted_data = fernet.encrypt(data_json.encode())
-        return encrypted_data.decode()
-
-    @staticmethod
-    def decrypt_data(encrypted_hash, encryption_key):
-        """
-        Decrypt encrypted data back to original format.
-
-        Args:
-            encrypted_hash: Base64-encoded encrypted string
-            encryption_key: Base64-encoded encryption key
-
-        Returns:
-            Decrypted data (dictionary or original data structure)
-        """
-        fernet = Fernet(encryption_key)
-        # Fernet.decrypt expects bytes (base64-encoded), so just encode the string
-        decrypted_json = fernet.decrypt(encrypted_hash.encode()).decode()
-        return json.loads(decrypted_json)
 
     @staticmethod
     def get_settings(xblock, data, suffix=""):

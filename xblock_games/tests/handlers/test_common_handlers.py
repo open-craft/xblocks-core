@@ -56,27 +56,6 @@ class TestCommonHandlers(TestCase):
             self.assertLessEqual(len(name), 6)
             self.assertTrue(name.islower())
 
-    # Tests for generate_encryption_key
-    def test_generate_encryption_key(self):
-        """Test encryption key generation."""
-        key = CommonHandlers.generate_encryption_key(self.xblock)
-
-        self.assertIsInstance(key, bytes)
-        self.assertEqual(len(key), 44)  # Base64-encoded 32-byte key
-
-    # Tests for encrypt_data and decrypt_data
-    def test_encrypt_decrypt_data(self):
-        """Test encrypting and decrypting data."""
-        key = CommonHandlers.generate_encryption_key(self.xblock)
-        original_data = {"term": self.fake.word(), "definition": self.fake.sentence(), "index": self.fake.random_int()}
-
-        encrypted = CommonHandlers.encrypt_data(original_data, key)
-        self.assertIsInstance(encrypted, str)
-        self.assertNotEqual(encrypted, json.dumps(original_data))
-
-        decrypted = CommonHandlers.decrypt_data(encrypted, key)
-        self.assertEqual(decrypted, original_data)
-
     # Tests for get_settings
     def test_get_settings(self):
         """Test getting game settings."""
