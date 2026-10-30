@@ -124,6 +124,26 @@
   }
 
   /**
+   * Typeset the block's formulas once MathJax has finished starting up.
+   *
+   * The content is rendered server-side, so MathJax does not revisit it on its
+   * own; the legacy inline initializer used to queue this typesetting pass, and
+   * it has to keep working for both rendering paths. For themed blocks the
+   * formulas live in the shadow tree, so `target` is the shadow content root
+   * rather than the host element.
+   *
+   * @param {Element} target - The element (or shadow content root) to typeset.
+   */
+  function typesetMath(target) {
+    if (typeof MathJax !== 'undefined' && MathJax !== null &&
+        MathJax.startup && MathJax.startup.promise) {
+      MathJax.startup.promise.then(function () {
+        MathJax.typesetPromise([target]);
+      });
+    }
+  }
+
+  /**
    * XBlock view entry point. Invoked by the XBlock JS runtime as
    * `HtmlBlock(runtime, element, initArgs)`.
    *
@@ -133,10 +153,12 @@
    */
   function HtmlBlock(runtime, element, initArgs) {
     if (!initArgs || !initArgs.use_mfe_theming) {
+      typesetMath(element);
       return;
     }
 
     var root = sandbox(element);
+    typesetMath(root);
 
     getThemes(initArgs.mfe_config_api).then(function (themes) {
       var seen = {};
