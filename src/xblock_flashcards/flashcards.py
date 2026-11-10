@@ -159,6 +159,13 @@ class FlashcardsXBlock(XBlock):
             return {"success": False, "error": _("Delete failed")}
 
     @XBlock.json_handler
+    def get_settings(self, data, suffix=""):  # pylint: disable=unused-argument
+        return {
+            "cards": self.cards,
+            "is_shuffled": self.is_shuffled,
+        }
+
+    @XBlock.json_handler
     def save_settings(self, data, suffix=""):  # pylint: disable=unused-argument
         """
         Save game type, shuffle setting, and all cards in one API call.
