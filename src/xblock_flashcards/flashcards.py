@@ -158,13 +158,19 @@ class FlashcardsXBlock(XBlock):
         except Exception:  # pylint: disable=broad-exception-caught
             return {"success": False, "error": _("Delete failed")}
 
-    @XBlock.json_handler
-    def get_settings(self, data, suffix=""):  # pylint: disable=unused-argument
-        return {
+    # this cannot be json_handler, because json_handler only supports POST requests
+    @XBlock.handler
+    def load_flashcards(self, *_args, **_kwargs):
+        settings = {
             "cards": self.cards,
             "is_shuffled": self.is_shuffled,
+            "display_name": self.display_name,
         }
+        return Response(json.dumps(settings), content_type="application/json", charset="utf8")
 
+    # NOTE: this is not used if we go through the frontend authoring default save logic.
+    # This is fine I think, especially since we're going to be changing the way files are uploaded soon,
+    # which will remove the need of the own_storage_key validation.
     @XBlock.json_handler
     def save_settings(self, data, suffix=""):  # pylint: disable=unused-argument
         """
