@@ -7,22 +7,35 @@ import uuid
 from pydantic import BaseModel, Field
 
 
+class Image(BaseModel):
+    """
+    Represents an image with optional alt text
+    """
+
+    url: str
+    alt: str
+
+
+class CardSide(BaseModel):
+    """
+    Represents a side of a card
+    """
+
+    text: str
+    image: Image
+
+
 class Card(BaseModel):
     """
     Represents a single flashcard.
     """
 
     card_key: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    term: CardSide
+    definition: CardSide
 
-    term: str
-    term_image: str = ""
-    term_image_alt: str = ""
-    term_image_path: str = ""
-
-    definition: str
-    definition_image: str = ""
-    definition_image_alt: str = ""
-    definition_image_path: str = ""
+    # used by the frontend editor in Authoring
+    editor_open: bool
 
 
 class Settings(BaseModel):

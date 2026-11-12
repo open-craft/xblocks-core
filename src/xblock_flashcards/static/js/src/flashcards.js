@@ -37,9 +37,9 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         var card = cards[currentIndex];
         var isFlipped = $card.hasClass(flipClassName);
         if (isFlipped) {
-            return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Definition: ' + (card.definition || '') + '. Press Enter or Space to flip.';
+            return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Definition: ' + (card.definition.text || '') + '. Press Enter or Space to flip.';
         }
-        return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.term || '') + '. Press Enter or Space to flip.';
+        return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.term.text || '') + '. Press Enter or Space to flip.';
     }
 
     // Render current card
@@ -49,24 +49,24 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         var card = cards[currentIndex];
 
         // Update content
-        $term.text(card.term || '')
-        $('.flashcard-front-content').attr('title', card.term || '');
-        $definition.text(card.definition || '');
-        $('.flashcard-back-content').attr('title', card.definition || '');
+        $term.text(card.term.text || '')
+        $('.flashcard-front-content').attr('title', card.term.text || '');
+        $definition.text(card.definition.text || '');
+        $('.flashcard-back-content').attr('title', card.definition.text || '');
 
 
         // Handle term image
-        if (card.term_image && card.term_image.trim() !== '') {
-            var termAlt = card.term_image_alt || card.term || '';
-            $termImage.attr('src', card.term_image).attr('alt', termAlt).show();
+        if (card.term.image.url && card.term.image.url.trim() !== '') {
+            var termAlt = card.term.image.alt || card.term.text || '';
+            $termImage.attr('src', card.term.image.url).attr('alt', termAlt).show();
         } else {
             $termImage.hide();
         }
 
         // Handle definition image
-        if (card.definition_image && card.definition_image.trim() !== '') {
-            var defAlt = card.definition_image_alt || card.definition || '';
-            $definitionImage.attr('src', card.definition_image).attr('alt', defAlt).show();
+        if (card.definition.image.url && card.definition.image.url.trim() !== '') {
+            var defAlt = card.definition.image.alt || card.definition.text || '';
+            $definitionImage.attr('src', card.definition.image.url).attr('alt', defAlt).show();
         } else {
             $definitionImage.hide();
         }
@@ -88,7 +88,7 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         $element.find('.flashcard-front').attr('aria-hidden', 'false');
         $element.find('.flashcard-back').attr('aria-hidden', 'true');
         $card.attr('aria-label', getCardAriaLabel());
-        announce('Card ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.term || ''));
+        announce('Card ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.term.text || ''));
     }
 
     // Flip card
@@ -105,9 +105,9 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         }
         var card = cards[currentIndex];
         if ($card.hasClass(flipClassName)) {
-            announce('Definition: ' + (card.definition || ''));
+            announce('Definition: ' + (card.definition.text || ''));
         } else {
-            announce('Term: ' + (card.term || ''));
+            announce('Term: ' + (card.term.text || ''));
         }
         // Update aria-label after announce so it doesn't compete
         setTimeout(function() {
