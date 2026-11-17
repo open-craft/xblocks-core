@@ -71,10 +71,13 @@ _video_extracted = "xblock_video:VideoBlock"
 _word_cloud_extracted = "xblock_word_cloud:WordCloudBlock"
 # 'Done' XBlocks -- ones that are ready for general use today,
 # and have been migrated fully from edx-platform or their original repository.
-pdf = "xblock_pdf:PDFBlock"
 # These are prefixed to avoid conflicting with existing community blocks.
 openedx_flashcards = "xblock_flashcards:FlashcardsXBlock"
 openedx_matching = "xblock_matching:MatchingXBlock"
+
+# XXX temporary change to support installing alongside verawood deployment
+[project.entry-points."xblock.v1.overrides"]
+pdf = "xblock_pdf:PDFBlock"
 
 [project.entry-points."lms.djangoapp"]
 xblock_problem_capa = "xblock_problem.capa.apps:CapaAppConfig"
