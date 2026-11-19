@@ -9,11 +9,11 @@ from pydantic import BaseModel, Field
 
 class Image(BaseModel):
     """
-    Represents an image with optional alt text
+    Represents an image with alt text
     """
 
     url: str
-    alt: str
+    alt: str  # may be an empty string
 
 
 class CardSide(BaseModel):
@@ -31,8 +31,8 @@ class Card(BaseModel):
     """
 
     card_key: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    term: CardSide
-    definition: CardSide
+    front: CardSide
+    back: CardSide
 
     # used by the frontend editor in Authoring
     editor_open: bool

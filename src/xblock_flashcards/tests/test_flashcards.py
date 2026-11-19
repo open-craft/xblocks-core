@@ -49,12 +49,12 @@ def test_save_settings():
             "is_shuffled": "false",
             "cards": [
                 {
-                    "term": "hello",
-                    "definition": "a greeting",
+                    "front": "hello",
+                    "back": "a greeting",
                 },
                 {
-                    "term": "foo",
-                    "definition": "a common placeholder in code",
+                    "front": "foo",
+                    "back": "a common placeholder in code",
                 },
             ],
         },
@@ -63,5 +63,5 @@ def test_save_settings():
     assert block.display_name == "Flashcards!"
     assert not block.is_shuffled
     assert len(block.cards) == 2
-    assert block.cards[0]["term"] == "hello"
-    assert block.cards[0]["definition"] == "a greeting"
+    assert block.cards[0]["front"] == "hello"
+    assert block.cards[0]["back"] == "a greeting"

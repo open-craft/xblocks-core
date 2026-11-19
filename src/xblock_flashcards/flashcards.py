@@ -30,7 +30,7 @@ class FlashcardsXBlock(XBlock):
     cards = List(
         default=[],
         scope=Scope.content,
-        help=_("The list of terms and definitions."),
+        help=_("The list of double sided flashcards."),
     )
 
     is_shuffled = Boolean(

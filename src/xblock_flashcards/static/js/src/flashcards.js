@@ -15,10 +15,10 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
     var $cardWrapper = $element.find('.flashcards-card-wrapper');
     var $footer = $element.find('.flashcard-footer');
     var $card = $element.find('#flashcard-card');
-    var $term = $element.find('#flashcard-term');
-    var $definition = $element.find('#flashcard-definition');
-    var $termImage = $element.find('#flashcard-term-image');
-    var $definitionImage = $element.find('#flashcard-definition-image');
+    var $front = $element.find('#flashcard-front');
+    var $back = $element.find('#flashcard-back');
+    var $frontImage = $element.find('#flashcard-front-image');
+    var $backImage = $element.find('#flashcard-back-image');
     var $progress = $element.find('#flashcard-progress');
     var $prevBtn = $element.find('#flashcard-prev');
     var $nextBtn = $element.find('#flashcard-next');
@@ -37,9 +37,9 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         var card = cards[currentIndex];
         var isFlipped = $card.hasClass(flipClassName);
         if (isFlipped) {
-            return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Definition: ' + (card.definition.text || '') + '. Press Enter or Space to flip.';
+            return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Back: ' + (card.back.text || '') + '. Press Enter or Space to flip.';
         }
-        return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.term.text || '') + '. Press Enter or Space to flip.';
+        return 'Flashcard ' + (currentIndex + 1) + ' of ' + totalCards + '. Front: ' + (card.front.text || '') + '. Press Enter or Space to flip.';
     }
 
     // Render current card
@@ -49,26 +49,24 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         var card = cards[currentIndex];
 
         // Update content
-        $term.text(card.term.text || '')
-        $('.flashcard-front-content').attr('title', card.term.text || '');
-        $definition.text(card.definition.text || '');
-        $('.flashcard-back-content').attr('title', card.definition.text || '');
+        $front.text(card.front.text || '')
+        $('.flashcard-front-content').attr('title', card.front.text || '');
+        $back.text(card.back.text || '');
+        $('.flashcard-back-content').attr('title', card.back.text || '');
 
 
-        // Handle term image
-        if (card.term.image.url && card.term.image.url.trim() !== '') {
-            var termAlt = card.term.image.alt || card.term.text || '';
-            $termImage.attr('src', card.term.image.url).attr('alt', termAlt).show();
+        // Handle front image
+        if (card.front.image.url && card.front.image.url.trim() !== '') {
+            $frontImage.attr('src', card.front.image.url).attr('alt', card.front.image.alt).show();
         } else {
-            $termImage.hide();
+            $frontImage.hide();
         }
 
-        // Handle definition image
-        if (card.definition.image.url && card.definition.image.url.trim() !== '') {
-            var defAlt = card.definition.image.alt || card.definition.text || '';
-            $definitionImage.attr('src', card.definition.image.url).attr('alt', defAlt).show();
+        // Handle back image
+        if (card.back.image.url && card.back.image.url.trim() !== '') {
+            $backImage.attr('src', card.back.image.url).attr('alt', card.back.image.alt).show();
         } else {
-            $definitionImage.hide();
+            $backImage.hide();
         }
 
         // Update progress (1-indexed for display)
@@ -88,7 +86,7 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         $element.find('.flashcard-front').attr('aria-hidden', 'false');
         $element.find('.flashcard-back').attr('aria-hidden', 'true');
         $card.attr('aria-label', getCardAriaLabel());
-        announce('Card ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.term.text || ''));
+        announce('Card ' + (currentIndex + 1) + ' of ' + totalCards + '. Term: ' + (card.front.text || ''));
     }
 
     // Flip card
@@ -105,9 +103,9 @@ function OpenedXFlashcardsInit(runtime, element, cards) {
         }
         var card = cards[currentIndex];
         if ($card.hasClass(flipClassName)) {
-            announce('Definition: ' + (card.definition.text || ''));
+            announce('Back: ' + (card.back.text || ''));
         } else {
-            announce('Term: ' + (card.term.text || ''));
+            announce('Front: ' + (card.front.text || ''));
         }
         // Update aria-label after announce so it doesn't compete
         setTimeout(function() {

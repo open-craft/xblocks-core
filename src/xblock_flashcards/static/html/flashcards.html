@@ -11,7 +11,7 @@
     </header>
 
     <div class="flashcards-start-screen">
-        <h3 class="flashcards-start-title">{% trans "Click each card to reveal the definition" %}</h3>
+        <h3 class="flashcards-start-title">{% trans "Click each card to reveal the back" %}</h3>
         <button class="flashcards-start-button" {% if n_cards <= 0 %}disabled{% endif %}>{% trans "Start" %}</button>
     </div>
 
@@ -22,14 +22,14 @@
             <div class="flashcard-inner">
                 <div class="flashcard-face flashcard-front" aria-hidden="false">
                     <div class="flashcard-front-content">
-                        <img id="flashcard-term-image" class="image" alt="Flashcard term" />
-                        <div class="flashcard-text" id="flashcard-term">&nbsp;</div>
+                        <img id="flashcard-front-image" class="image" alt="Flashcard front image" />
+                        <div class="flashcard-text" id="flashcard-front">&nbsp;</div>
                     </div>
                 </div>
                 <div class="flashcard-face flashcard-back" aria-hidden="true">
                     <div class="flashcard-back-content">
-                        <img id="flashcard-definition-image" class="image" alt="Flashcard definition" />
-                        <div class="flashcard-text" id="flashcard-definition">&nbsp;</div>
+                        <img id="flashcard-back-image" class="image" alt="Flashcard back image" />
+                        <div class="flashcard-text" id="flashcard-back">&nbsp;</div>
                     </div>
                 </div>
             </div>
@@ -61,7 +61,7 @@
             </div>
             <div class="help-popover">
                 <div class="help-popover-content">
-                    {% trans "Click each card to reveal the definition" %}
+                    {% trans "Click each card to reveal the back" %}
                 </div>
                 <div class="help-popover-arrow"></div>
             </div>
