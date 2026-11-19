@@ -79,6 +79,9 @@ class FlashcardsXBlock(XBlock):
     # this cannot be json_handler, because json_handler only supports POST requests
     @XBlock.handler
     def load_flashcards(self, *_args, **_kwargs):
+        """
+        Respond with a json representation of the block.
+        """
         settings = {
             "cards": self.cards,
             "is_shuffled": self.is_shuffled,

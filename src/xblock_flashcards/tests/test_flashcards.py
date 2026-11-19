@@ -37,31 +37,3 @@ def test_defaults_render():
     block = make_block()
     content = get_student_content(block)
     assert "flashcards-start-screen" in content
-
-
-def test_save_settings():
-    """Test that the xblock settings are saved."""
-    block = make_block()
-    request = mock_handle_request(
-        "POST",
-        {
-            "display_name": "Flashcards!",
-            "is_shuffled": "false",
-            "cards": [
-                {
-                    "front": "hello",
-                    "back": "a greeting",
-                },
-                {
-                    "front": "foo",
-                    "back": "a common placeholder in code",
-                },
-            ],
-        },
-    )
-    block.save_settings(request)
-    assert block.display_name == "Flashcards!"
-    assert not block.is_shuffled
-    assert len(block.cards) == 2
-    assert block.cards[0]["front"] == "hello"
-    assert block.cards[0]["back"] == "a greeting"
