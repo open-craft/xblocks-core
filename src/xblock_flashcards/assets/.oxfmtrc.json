@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "useTabs": false,
+  "ignorePatterns": ["src/coverage/**"]
+}
