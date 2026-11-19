@@ -15,18 +15,19 @@ def make_block(**fields: str) -> FlashcardsXBlock:
     return FlashcardsXBlock(ToyRuntime(), scope_ids=scope_ids, field_data=DictFieldData(data=fields))
 
 
-def get_student_content(block: FlashcardsXBlock) -> str:
-    """Get the contents of a student render for a block."""
-    frag = block.student_view()
-    as_dict = frag.to_dict()
-    return as_dict["content"]
-
-
 def test_defaults_render():
-    """Test the basic view loads."""
+    """Test the student view initializes the React app with the block data."""
     block = make_block()
-    content = get_student_content(block)
-    assert "flashcards-start-screen" in content
+    frag = block.student_view().to_dict()
+
+    assert frag["js_init_fn"] == "FlashCardsXBlock"
+    init_args = frag["json_init_args"]
+    assert "url" in init_args
+    assert init_args["data"] == {
+        "display_name": "Flashcards",
+        "is_shuffled": True,
+        "cards": [],
+    }
 
 
 def test_load_data_default():
