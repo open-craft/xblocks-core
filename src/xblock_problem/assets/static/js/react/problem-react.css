@@ -1,0 +1,25 @@
+/*
+ * Minimal deployment-side theme setup for the prototype: one design token
+ * override, scoped to the renderer, proving Paragon components pick up
+ * deployment tokens inside the LMS unit iframe.
+ */
+.xblock-problem-react {
+  --pgn-color-primary-base: #0b5f5a;
+  --pgn-color-primary-500: #0b5f5a;
+  padding: 1rem;
+}
+
+.xblock-problem-react .react-problem-choices {
+  border: 0;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.xblock-problem-react .react-problem-choice-label {
+  display: inline-block;
+}
+
+.xblock-problem-react .react-problem-description {
+  color: #5a5a5a;
+  font-size: 0.875rem;
+}

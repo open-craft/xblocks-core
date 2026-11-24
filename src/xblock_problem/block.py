@@ -46,6 +46,7 @@ from xblock.progress import Progress
 from xblock.runtime import KeyValueStore, KvsFieldData
 from xblock.scorable import ScorableXBlockMixin, Score, ShowCorrectness
 
+from xblock_problem import _prototype_react_view as prototype_react_view
 from xblock_problem.capa import responsetypes
 from xblock_problem.capa.capa_problem import LoncapaProblem, LoncapaSystem
 from xblock_problem.capa.inputtypes import Status
@@ -439,6 +440,12 @@ class ProblemBlock(ScorableXBlockMixin, LegacyXmlMixin, XBlock):
         except Exception as err:  # pylint: disable=broad-exception-caught
             html = self.handle_fatal_lcp_error(err if show_detailed_errors else None)
         else:
+            # PROTOTYPE (throwaway): opt-in React + Paragon renderer, fail-closed on
+            # the enabled flag plus the one allow-listed usage key; None means
+            # "use the unchanged legacy view".
+            react_fragment = prototype_react_view.build_fragment(self)
+            if react_fragment is not None:
+                return react_fragment
             html = self.get_html()
         fragment = Fragment(html)
         fragment.add_css_url(self.runtime.local_resource_url(self, "public/css/ProblemBlockDisplay.css"))
@@ -548,6 +555,12 @@ class ProblemBlock(ScorableXBlockMixin, LegacyXmlMixin, XBlock):
                 "attempts_used": after_attempts,
             }
         )
+
+        # PROTOTYPE (throwaway): only check/reset requests that opt in *and* target
+        # the allow-listed block get the structured view; everything else keeps the
+        # legacy payload byte-for-byte unchanged.
+        if prototype_react_view.should_attach(self, dispatch, data):
+            prototype_react_view.attach_to_response(self, result)
 
         return json.dumps(result, cls=ComplexEncoder)
 
