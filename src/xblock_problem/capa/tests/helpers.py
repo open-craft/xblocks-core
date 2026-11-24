@@ -49,10 +49,6 @@ class StubXQueueService:
         self.default_queuename = "testqueue"
         self.waittime = 10
 
-    def construct_callback(self, dispatch="score_update"):
-        """A callback url method to use in tests."""
-        return dispatch
-
 
 def mock_capa_system(render_template=None):
     """

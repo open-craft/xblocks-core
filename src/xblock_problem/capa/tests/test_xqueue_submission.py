@@ -10,6 +10,7 @@ import pytest
 from opaque_keys.edx.locator import BlockUsageLocator, CourseLocator
 from xblock.fields import ScopeIds
 
+from xblock_problem.capa.xqueue_interface import make_xheader
 from xblock_problem.capa.xqueue_submission import XQueueInterfaceSubmission
 
 
@@ -30,7 +31,7 @@ def test_get_submission_params(xqueue_service):  # pylint: disable=redefined-out
     """
     Test extracting item data from an xqueue submission.
     """
-    header = json.dumps({"lms_callback_url": "http://example.com/callback", "queue_name": "default"})
+    header = make_xheader(lms_key="default", queue_name="default")
     payload = json.dumps(
         {
             "student_info": json.dumps({"anonymous_student_id": "student_id"}),
@@ -62,14 +63,7 @@ def test_send_to_submission(mock_create_external_grader_detail, xqueue_service):
     """
     Test sending a submission to the grading system.
     """
-    header = json.dumps(
-        {
-            "lms_callback_url": (
-                "http://example.com/courses/course-v1:test_org+test_course+test_run/xqueue/5/"
-                "block-v1:test_org+test_course+test_run+type@problem+block@ExampleProblem/"
-            ),
-        }
-    )
+    header = make_xheader(lms_key="default", queue_name="default")
     body = json.dumps(
         {
             "student_info": json.dumps({"anonymous_student_id": "student_id"}),
@@ -266,13 +260,7 @@ def test_send_to_submission_with_missing_fields(mock_create_external_grader_deta
     """
     Test send_to_submission with missing required fields.
     """
-    header = json.dumps(
-        {
-            "lms_callback_url": (
-                "http://example.com/courses/course-v1:test_org+test_course+test_run/xqueue/5/block@item_id/"
-            )
-        }
-    )
+    header = make_xheader(lms_key="default", queue_name="default")
     body = json.dumps(
         {
             "student_info": json.dumps({"anonymous_student_id": "student_id"}),

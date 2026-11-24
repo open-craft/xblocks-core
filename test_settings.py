@@ -4,9 +4,6 @@ Minimal Django settings for running tests on xblocks-core.
 
 from pathlib import Path
 
-from django.http import HttpResponse
-from django.urls import re_path
-
 BASE_DIR = Path(__file__).resolve().parent
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -22,25 +19,11 @@ DATABASES = {
 }
 
 
-def dummy_callback(_request, *_args, **_kwargs):
-    """
-    Minimal placeholder view for test URL patterns.
-    Underscored arguments silence lint warnings for unused variables.
-    """
-    return HttpResponse("OK")
-
-
 ROOT_URLCONF = type(
     "URLConf",
     (),
     {
-        "urlpatterns": [
-            re_path(
-                r"^courses/(?P<course_id>.+)/xqueue/(?P<userid>[^/]+)/(?P<mod_id>.+)/(?P<dispatch>[^/]+)$",
-                dummy_callback,
-                name="xqueue_callback",
-            ),
-        ]
+        "urlpatterns": [],
     },
 )
 
@@ -66,13 +49,7 @@ CODE_JAIL_REST_SERVICE_READ_TIMEOUT = 3.5  # time in seconds
 
 # CAPA External Code Evaluation #
 
-# Used with XQueue
 XQUEUE_WAITTIME_BETWEEN_REQUESTS = 5  # seconds
-XQUEUE_INTERFACE = {
-    "url": "http://localhost:18040",
-    "basic_auth": ["edx", "edx"],
-    "django_auth": {"username": "lms", "password": "password"},
-}
 
 TEMPLATES = [
     {

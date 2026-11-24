@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, Mock
 from django.conf import settings
 from opaque_keys.edx.locator import CourseLocator
 from path import Path as path
-from requests.auth import HTTPBasicAuth
 from xblock.reference.user_service import UserService, XBlockUser
 from xblock.test.tools import TestRuntime
 
@@ -129,23 +128,9 @@ class StubXQueueService:
 
     def __init__(self):
         """Initialize the stubbed XQueueService instance."""
-        basic_auth = settings.XQUEUE_INTERFACE.get("basic_auth")
-        requests_auth = HTTPBasicAuth(*basic_auth) if basic_auth else None
-
-        self.interface = XQueueInterface(
-            settings.XQUEUE_INTERFACE["url"],
-            settings.XQUEUE_INTERFACE["django_auth"],
-            requests_auth,
-            block=MagicMock(),
-            use_submission_service=False,
-        )
+        self.interface = XQueueInterface(block=MagicMock())
         self.default_queuename = "testqueue"
-
         self.waittime = getattr(settings, "XQUEUE_WAITTIME_BETWEEN_REQUESTS", 5)
-
-    def construct_callback(self, dispatch="score_update"):
-        """A callback url method to use in tests."""
-        return dispatch
 
 
 class TestDescriptorSystem(TestRuntime):

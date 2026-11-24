@@ -955,6 +955,19 @@ class CodeResponseTest(ResponseTest):
         timestr = datetime.strftime(time, DATEFORMAT)
         return {"key": key, "time": timestr}
 
+    def test_get_score_without_xqueue(self):
+        """
+        Without an xqueue service, as in Studio, a submission is not queued and the learner
+        is told no grader is set up.
+        """
+        responder = list(self.problem.responders.values())[0]
+        responder.capa_system.xqueue = None
+
+        cmap = responder.get_score({responder.answer_id: "def square(x): return x * x"})
+
+        assert not cmap.is_queued(responder.answer_id)
+        assert cmap.get_msg(responder.answer_id) == "Error: No grader has been set up for this problem."
+
     def test_is_queued(self):
         """
         Simple test of whether LoncapaProblem knows when it's been queued

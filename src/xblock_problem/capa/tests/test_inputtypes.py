@@ -18,22 +18,17 @@ TODO:
 """
 
 import json
-import textwrap
 import unittest
 from collections import OrderedDict
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 from xml.sax import saxutils
 
 import pytest
-import six
 from lxml import etree
-from lxml.html import fromstring
 from pyparsing import ParseException
 
 from xblock_problem.capa import inputtypes
-from xblock_problem.capa.checker import DemoSystem
 from xblock_problem.capa.tests.helpers import mock_capa_system
-from xblock_problem.capa.xqueue_interface import XQUEUE_TIMEOUT
 from xblock_problem.markup import HTML
 
 # just a handy shortcut
@@ -466,509 +461,39 @@ class CodeInputTest(unittest.TestCase):
 
         assert context == expected
 
+    def test_matlabinput_is_a_code_input(self):
+        """
+        A legacy <matlabinput> still parses and renders as a plain code box.
 
-class MatlabTest(unittest.TestCase):
-    """
-    Test Matlab input types
-    """
-
-    def setUp(self):
-        super().setUp()
-        self.rows = "10"
-        self.cols = "80"
-        self.tabsize = "4"
-        self.mode = ""
-        self.payload = "payload"
-        self.linenumbers = "true"
-        self.xml = f"""<matlabinput id="prob_1_2"
-            rows="{self.rows}" cols="{self.cols}"
-            tabsize="{self.tabsize}" mode="{self.mode}"
-            linenumbers="{self.linenumbers}">
+        The MATLAB integration is gone (public-engineering#192); the tag stays so
+        existing problems keep working and learners keep their scores.
+        """
+        xml_str = """<matlabinput id="prob_1_2"
+            rows="10" cols="80"
+            tabsize="4" mode=""
+            linenumbers="true">
                 <plot_payload>
-                    {self.payload}
+                    payload
                 </plot_payload>
             </matlabinput>"""
-        elt = etree.fromstring(self.xml)
+        element = etree.fromstring(xml_str)
         state = {
             "value": 'print "good evening"',
             "status": "incomplete",
-            "feedback": {"message": "3"},
-            "response_data": {},
-        }
-
-        self.input_class = lookup_tag("matlabinput")
-        self.the_input = self.input_class(mock_capa_system(), elt, state)
-
-    def test_rendering(self):
-        """Check that Matlab input renders with default context."""
-        context = self.the_input._get_render_context()  # pylint: disable=protected-access
-
-        expected = {
-            "STATIC_URL": "/dummy-static/",
-            "id": "prob_1_2",
-            "value": 'print "good evening"',
-            "status": inputtypes.Status("queued"),
-            "msg": self.the_input.submitted_msg,
-            "mode": self.mode,
-            "rows": self.rows,
-            "cols": self.cols,
-            "queue_msg": "",
-            "linenumbers": "true",
-            "hidden": "",
-            "tabsize": int(self.tabsize),
-            "button_enabled": True,
-            "queue_len": "3",
-            "matlab_editor_js": "/dummy-static/js/vendor/CodeMirror/octave.js",
-            "still_running_msg": "Your code is still being run. Refresh the page to see updates.",
-            "response_data": {},
-            "describedby_html": HTML('aria-describedby="status_prob_1_2"'),
-        }
-
-        assert context == expected
-
-    def test_rendering_with_state(self):
-        """Verify rendering when Matlab input has a pre-existing state."""
-        state = {
-            "value": 'print "good evening"',
-            "status": "incomplete",
-            "input_state": {"queue_msg": "message"},
             "feedback": {"message": "3"},
             "response_data": RESPONSE_DATA,
         }
-        elt = etree.fromstring(self.xml)
 
-        the_input = self.input_class(mock_capa_system(), elt, state)
+        input_class = lookup_tag("matlabinput")
+        assert input_class is inputtypes.CodeInput
+        the_input = input_class(mock_capa_system(), element, state)
+
         context = the_input._get_render_context()  # pylint: disable=protected-access
-        prob_id = "prob_1_2"
-        expected = {
-            "STATIC_URL": "/dummy-static/",
-            "id": prob_id,
-            "value": 'print "good evening"',
-            "status": inputtypes.Status("queued"),
-            "msg": the_input.submitted_msg,
-            "mode": self.mode,
-            "rows": self.rows,
-            "cols": self.cols,
-            "queue_msg": "message",
-            "linenumbers": "true",
-            "hidden": "",
-            "tabsize": int(self.tabsize),
-            "button_enabled": True,
-            "queue_len": "3",
-            "matlab_editor_js": "/dummy-static/js/vendor/CodeMirror/octave.js",
-            "still_running_msg": "Your code is still being run. Refresh the page to see updates.",
-            "response_data": RESPONSE_DATA,
-            "describedby_html": DESCRIBEDBY.format(status_id=prob_id),
-        }
-
-        assert context == expected
-
-    def test_rendering_when_completed(self):
-        """Ensure rendering is correct when Matlab input status is completed."""
-        for status in ["correct", "incorrect"]:
-            state = {
-                "value": 'print "good evening"',
-                "status": status,
-                "input_state": {},
-                "response_data": RESPONSE_DATA,
-            }
-            elt = etree.fromstring(self.xml)
-            prob_id = "prob_1_2"
-            the_input = self.input_class(mock_capa_system(), elt, state)
-            context = the_input._get_render_context()  # pylint: disable=protected-access
-            expected = {
-                "STATIC_URL": "/dummy-static/",
-                "id": prob_id,
-                "value": 'print "good evening"',
-                "status": inputtypes.Status(status),
-                "msg": "",
-                "mode": self.mode,
-                "rows": self.rows,
-                "cols": self.cols,
-                "queue_msg": "",
-                "linenumbers": "true",
-                "hidden": "",
-                "tabsize": int(self.tabsize),
-                "button_enabled": False,
-                "queue_len": "0",
-                "matlab_editor_js": "/dummy-static/js/vendor/CodeMirror/octave.js",
-                "still_running_msg": "Your code is still being run. Refresh the page to see updates.",
-                "response_data": RESPONSE_DATA,
-                "describedby_html": DESCRIBEDBY.format(status_id=prob_id),
-            }
-
-            assert context == expected
-
-    @patch("xblock_problem.capa.inputtypes.time.time", return_value=10)
-    def test_rendering_while_queued(self, time):  # pylint: disable=unused-argument
-        """Test rendering of Matlab input while a queue is in progress."""
-        state = {
-            "value": 'print "good evening"',
-            "status": "incomplete",
-            "input_state": {"queuestate": "queued", "queuetime": 5},
-            "response_data": RESPONSE_DATA,
-        }
-        elt = etree.fromstring(self.xml)
-        prob_id = "prob_1_2"
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        context = the_input._get_render_context()  # pylint: disable=protected-access
-        expected = {
-            "STATIC_URL": "/dummy-static/",
-            "id": prob_id,
-            "value": 'print "good evening"',
-            "status": inputtypes.Status("queued"),
-            "msg": the_input.submitted_msg,
-            "mode": self.mode,
-            "rows": self.rows,
-            "cols": self.cols,
-            "queue_msg": "",
-            "linenumbers": "true",
-            "hidden": "",
-            "tabsize": int(self.tabsize),
-            "button_enabled": True,
-            "queue_len": "1",
-            "matlab_editor_js": "/dummy-static/js/vendor/CodeMirror/octave.js",
-            "still_running_msg": "Your code is still being run. Refresh the page to see updates.",
-            "response_data": RESPONSE_DATA,
-            "describedby_html": DESCRIBEDBY.format(status_id=prob_id),
-        }
-
-        assert context == expected
-
-    def test_plot_data(self):
-        """Verify that plot submission sends data to Xqueue successfully."""
-        data = {"submission": "x = 1234;"}
-        response = self.the_input.handle_ajax("plot", data)
-        self.the_input.capa_system.xqueue.interface.send_to_queue.assert_called_with(header=ANY, body=ANY)
-        assert response["success"]
-        assert self.the_input.input_state["queuekey"] is not None
-        assert self.the_input.input_state["queuestate"] == "queued"
-
-    def test_plot_data_failure(self):
-        """Check behavior when plot submission to Xqueue fails."""
-        data = {"submission": "x = 1234;"}
-        error_message = "Error message!"
-        self.the_input.capa_system.xqueue.interface.send_to_queue.return_value = (1, error_message)
-        response = self.the_input.handle_ajax("plot", data)
-        assert not response["success"]
-        assert response["message"] == error_message
-        assert "queuekey" not in self.the_input.input_state
-        assert "queuestate" not in self.the_input.input_state
-
-    @patch("xblock_problem.capa.inputtypes.time.time", return_value=10)
-    def test_ungraded_response_success(self, time):  # pylint: disable=unused-argument
-        """Test successful handling of ungraded responses from Xqueue."""
-        queuekey = "abcd"
-        input_state = {"queuekey": queuekey, "queuestate": "queued", "queuetime": 5}
-        state = {
-            "value": 'print "good evening"',
-            "status": "incomplete",
-            "input_state": input_state,
-            "feedback": {"message": "3"},
-        }
-        elt = etree.fromstring(self.xml)
-
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        inner_msg = "hello!"
-        queue_msg = json.dumps({"msg": inner_msg})
-
-        the_input.ungraded_response(queue_msg, queuekey)
-        assert input_state["queuekey"] is None
-        assert input_state["queuestate"] is None
-        assert input_state["queue_msg"] == inner_msg
-
-    @patch("xblock_problem.capa.inputtypes.time.time", return_value=10)
-    def test_ungraded_response_key_mismatch(self, time):  # pylint: disable=unused-argument
-        """Ensure ungraded responses with mismatched keys are ignored."""
-        queuekey = "abcd"
-        input_state = {"queuekey": queuekey, "queuestate": "queued", "queuetime": 5}
-        state = {
-            "value": 'print "good evening"',
-            "status": "incomplete",
-            "input_state": input_state,
-            "feedback": {"message": "3"},
-        }
-        elt = etree.fromstring(self.xml)
-
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        inner_msg = "hello!"
-        queue_msg = json.dumps({"msg": inner_msg})
-
-        the_input.ungraded_response(queue_msg, "abc")
-        assert input_state["queuekey"] == queuekey
-        assert input_state["queuestate"] == "queued"
-        assert "queue_msg" not in input_state
-
-    @patch("xblock_problem.capa.inputtypes.time.time", return_value=20)
-    def test_matlab_response_timeout_not_exceeded(self, time):  # pylint: disable=unused-argument
-        """Check status when Matlab response timeout has not been exceeded."""
-
-        state = {"input_state": {"queuestate": "queued", "queuetime": 5}}
-        elt = etree.fromstring(self.xml)
-
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        assert the_input.status == "queued"
-
-    @patch("xblock_problem.capa.inputtypes.time.time", return_value=45)
-    def test_matlab_response_timeout_exceeded(self, time):  # pylint: disable=unused-argument
-        """Verify behavior when Matlab response timeout is exceeded."""
-
-        state = {"input_state": {"queuestate": "queued", "queuetime": 5}}
-        elt = etree.fromstring(self.xml)
-
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        assert the_input.status == "unsubmitted"
-        assert the_input.msg == f"No response from Xqueue within {XQUEUE_TIMEOUT} seconds. Aborted."
-
-    @patch("xblock_problem.capa.inputtypes.time.time", return_value=20)
-    def test_matlab_response_migration_of_queuetime(self, time):  # pylint: disable=unused-argument
-        """
-        Test if problem was saved before queuetime was introduced.
-        """
-        state = {"input_state": {"queuestate": "queued"}}
-        elt = etree.fromstring(self.xml)
-
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        assert the_input.status == "unsubmitted"
-
-    def test_matlab_api_key(self):
-        """
-        Test that api_key ends up in the xqueue payload
-        """
-        elt = etree.fromstring(self.xml)
-        system = mock_capa_system()
-        system.matlab_api_key = "test_api_key"
-        the_input = lookup_tag("matlabinput")(system, elt, {})
-
-        data = {"submission": "x = 1234;"}
-        the_input.handle_ajax("plot", data)
-
-        body = system.xqueue.interface.send_to_queue.call_args[1]["body"]
-        payload = json.loads(body)
-        assert "test_api_key" == payload["token"]
-        assert "2" == payload["endpoint_version"]
-
-    def test_get_html(self):  # pylint: disable=too-many-locals
-        """Test that Matlab input generates correct HTML representation."""
-        # usual output
-        output = self.the_input.get_html()
-        output_string = etree.tostring(output).decode("utf-8")
-        assert output_string.startswith("<div>{")
-        assert output_string.endswith("}</div>")
-        output_string = output_string.replace("}</div>", "")
-        output_string = output_string.replace("<div>{", "")
-        output_list = output_string.split(",")
-        for index, value in enumerate(output_list):
-            output_list[index] = value.replace("u'", "'").strip()
-
-        expected_string = """
-        \'matlab_editor_js\': \'/dummy-static/js/vendor/CodeMirror/octave.js\',
-        \'value\': \'print "good evening"\', \'hidden\': \'\',
-        \'msg\': \'Submitted. As soon as a response is returned, this message will be replaced by that feedback.\',
-        \'status\': Status(\'queued\'), \'response_data\': {}, \'queue_msg\': \'\', \'mode\': \'\',
-        \'id\': \'prob_1_2\', \'queue_len\': \'3\', \'tabsize\': 4, \'STATIC_URL\': \'/dummy-static/\',
-        \'linenumbers\': \'true\', \'cols\': \'80\', \'button_enabled\': True, \'rows\': \'10\',
-        \'still_running_msg\': \'Your code is still being run. Refresh the page to see updates.\',
-        \'describedby_html\': Markup(\'aria-describedby="status_prob_1_2"\')"""
-        expected_list = (textwrap.dedent(expected_string).replace("\n", " ").strip()).split(",")
-        for index, value in enumerate(expected_list):
-            expected_list[index] = value.replace("u'", "'").strip()
-        six.assertCountEqual(self, output_list, expected_list)
-
-        # test html, that is correct HTML5 html, but is not parsable by XML parser.
-        old_render_template = self.the_input.capa_system.render_template
-        self.the_input.capa_system.render_template = lambda *args: textwrap.dedent(
-            "<div class='matlabResponse'><div id='mwAudioPlaceHolder'>"
-            "<audio controls autobuffer autoplay src='data:audio/wav;base64='>"
-            "Audio is not supported on this browser.</audio>"
-            "<div>Right click "
-            "<a href=https://endpoint.mss-mathworks.com/media/filename.wav>here</a> "
-            'and click "Save As" to download the file</div></div>'
-            "<div style='white-space:pre' class='commandWindowOutput'></div><ul></ul></div>"
-        ).replace("\n", "")
-
-        output = self.the_input.get_html()
-        elements = []
-        element_tags = []
-        element_keys = []
-        for element in output.iter():
-            elements.append(element)
-            element_tags.append(element.tag)
-            element_keys.append(element.keys())
-        assert element_tags.count("div") == 4
-        assert element_tags.count("audio") == 1
-        audio_index = element_tags.index("audio")
-
-        six.assertCountEqual(self, element_keys[audio_index], ["autobuffer", "controls", "autoplay", "src"])
-        assert elements[audio_index].get("src") == "data:audio/wav;base64="
-        assert elements[audio_index].text == "Audio is not supported on this browser."
-        href_index = element_keys.index(["href"])
-        assert elements[href_index].get("href") == "https://endpoint.mss-mathworks.com/media/filename.wav"
-        id_index = element_keys.index(["id"])
-        assert elements[id_index].get("id") == "mwAudioPlaceHolder"
-        output_string = etree.tostring(output).decode("utf-8")
-
-        # check that exception is raised during parsing for html.
-        self.the_input.capa_system.render_template = lambda *args: "<aaa"
-        with pytest.raises(etree.XMLSyntaxError):
-            self.the_input.get_html()
-
-        self.the_input.capa_system.render_template = old_render_template
-
-    def test_malformed_queue_msg(self):
-        """Verify handling of malformed queue messages in Matlab input."""
-        # an actual malformed response
-        queue_msg = textwrap.dedent("""
-        <div class='matlabResponse'>
-            <div style='white-space:pre' class='commandWindowOutput'>
-                <strong>if</strong> Conditionally execute statements.
-                The general form of the <strong>if</strong> statement is
-
-                <strong>if</strong> expression
-                    statements
-                ELSEIF expression
-                    statements
-                ELSE
-                    statements
-                END
-
-                The statements are executed if the real part of the expression
-                has all non-zero elements. The ELSE and ELSEIF parts are optional.
-                Zero or more ELSEIF parts can be used as well as nested <strong>if</strong>'s.
-                The expression is usually of the form expr rop expr where
-                rop is ==, <, >, <=, >=, or ~=.
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjAAAAGkCAIAAACgj==" />
-
-                Example
-                if I == J
-                    A(I,J) = 2;
-                elseif abs(I-J) == 1
-                    A(I,J) = -1;
-                else
-                    A(I,J) = 0;
-                end
-
-                See also <a href="matlab:help relop">relop</a>,
-                <a href="matlab:help else">else</a>,
-                <a href="matlab:help elseif">elseif</a>,
-                <a href="matlab:help end">end</a>,
-                <a href="matlab:help for">for</a>,
-                <a href="matlab:help while">while</a>,
-                <a href="matlab:help switch">switch</a>.
-
-                Reference page in Help browser
-                <a href="matlab:doc if">doc if</a>
-
-            </div>
-            <ul></ul>
-        </div>
-        """)
-
-        state = {
-            "value": 'print "good evening"',
-            "status": "incomplete",
-            "input_state": {"queue_msg": queue_msg},
-            "feedback": {"message": "3"},
-            "response_data": RESPONSE_DATA,
-        }
-        elt = etree.fromstring(self.xml)
-
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        context = the_input._get_render_context()  # pylint: disable=protected-access
-        self.maxDiff = None  # pylint: disable=invalid-name
-        expected = fromstring(
-            '\n<div class="matlabResponse"><div class="commandWindowOutput" '
-            'style="white-space: pre;"> <strong>if</strong> Conditionally execute '
-            "statements.\nThe general form of the <strong>if</strong> statement is\n\n"
-            "   <strong>if</strong> expression\n     statements\n   ELSEIF expression\n"
-            "     statements\n   ELSE\n     statements\n   END\n\nThe statements are "
-            "executed if the real part of the expression \nhas all non-zero elements. "
-            "The ELSE and ELSEIF parts are optional.\nZero or more ELSEIF parts can be "
-            "used as well as nested <strong>if</strong>'s.\nThe expression is usually "
-            "of the form expr rop expr where \nrop is ==, &lt;, &gt;, &lt;=, &gt;=, or "
-            '~=.\n<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjAAAAGkCAIA'
-            'AACgj==">\n\nExample\n   if I == J\n     A(I,J) = 2;\n   elseif abs(I-J) '
-            "== 1\n     A(I,J) = -1;\n   else\n     A(I,J) = 0;\n   end\n\nSee also "
-            "<a>relop</a>, <a>else</a>, <a>elseif</a>, <a>end</a>, <a>for</a>, "
-            "<a>while</a>, <a>switch</a>.\n\nReference page in Help browser\n   "
-            "<a>doc if</a>\n\n</div><ul></ul></div>\n"
-        )
-
-        received = fromstring(context["queue_msg"])
-        html_tree_equal(received, expected)
-
-    def test_rendering_with_invalid_queue_msg(self):
-        """Ensure invalid queue messages are sanitized and handled."""
-        self.the_input.queue_msg = (
-            "<div class='matlabResponse'><div style='white-space:pre' class='commandWindowOutput'>"
-            "\nans =\n\n\u0002\n\n</div><ul></ul></div>"
-        )
-        context = self.the_input._get_render_context()  # pylint: disable=protected-access
-
-        self.maxDiff = None
-        prob_id = "prob_1_2"
-        expected = {
-            "STATIC_URL": "/dummy-static/",
-            "id": prob_id,
-            "value": 'print "good evening"',
-            "status": inputtypes.Status("queued"),
-            "msg": self.the_input.submitted_msg,
-            "mode": self.mode,
-            "rows": self.rows,
-            "cols": self.cols,
-            "queue_msg": "<span>Error running code.</span>",
-            "linenumbers": "true",
-            "hidden": "",
-            "tabsize": int(self.tabsize),
-            "button_enabled": True,
-            "queue_len": "3",
-            "matlab_editor_js": "/dummy-static/js/vendor/CodeMirror/octave.js",
-            "still_running_msg": "Your code is still being run. Refresh the page to see updates.",
-            "response_data": {},
-            "describedby_html": f'aria-describedby="status_{prob_id}"',
-        }
-        assert context == expected
-        self.the_input.capa_system.render_template = DemoSystem().render_template
-        self.the_input.get_html()  # Should not raise an exception
-
-    def test_matlab_queue_message_allowed_tags(self):
-        """
-        Test allowed tags.
-        """
-        allowed_tags = ["div", "p", "audio", "pre", "span"]
-        for tag in allowed_tags:
-            queue_msg = f"<{tag}>Test message</{tag}>"
-            state = {
-                "input_state": {"queue_msg": queue_msg},
-                "status": "queued",
-            }
-            elt = etree.fromstring(self.xml)
-            the_input = self.input_class(mock_capa_system(), elt, state)
-            assert the_input.queue_msg == queue_msg
-
-    def test_matlab_queue_message_not_allowed_tag(self):
-        """
-        Test not allowed tag.
-        """
-        not_allowed_tag = "script"
-        queue_msg = f"<{not_allowed_tag}>Test message</{not_allowed_tag}>"
-        state = {
-            "input_state": {"queue_msg": queue_msg},
-            "status": "queued",
-        }
-        elt = etree.fromstring(self.xml)
-        the_input = self.input_class(mock_capa_system(), elt, state)
-        expected = ""
-        assert the_input.queue_msg == expected
-
-    def test_matlab_sanitize_msg(self):
-        """
-        Check that the_input.msg is sanitized.
-        """
-        not_allowed_tag = "script"
-        self.the_input.msg = f"<{not_allowed_tag}>Test message</{not_allowed_tag}>"
-        expected = ""
-        assert self.the_input._get_render_context()["msg"] == expected  # pylint: disable=protected-access
+        assert context["value"] == 'print "good evening"'
+        assert context["status"] == inputtypes.Status("queued")
+        assert context["queue_len"] == "3"
+        assert context["mode"] == ""
+        assert "matlab" not in the_input.get_html().xpath("string()").lower()
 
 
 def html_tree_equal(received, expected):

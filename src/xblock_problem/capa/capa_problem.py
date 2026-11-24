@@ -105,7 +105,6 @@ class LoncapaSystem:
         resources_fs,
         seed,  # Why do we do this if we have self.seed?
         xqueue,
-        matlab_api_key=None,
     ):
         self.ajax_url = ajax_url
         self.anonymous_student_id = anonymous_student_id
@@ -119,7 +118,6 @@ class LoncapaSystem:
         self.seed = seed  # Why do we do this if we have self.seed?
         self.STATIC_URL = settings.STATIC_URL  # pylint: disable=invalid-name
         self.xqueue = xqueue
-        self.matlab_api_key = matlab_api_key
 
 
 class LoncapaProblem:
@@ -408,19 +406,6 @@ class LoncapaProblem:
                 responder.update_score(score_msg, cmap, queuekey)
         self.correct_map.set_dict(cmap.get_dict())
         return cmap
-
-    def ungraded_response(self, xqueue_msg, queuekey):
-        """
-        Handle any responses from the xqueue that do not contain grades
-        Will try to pass the queue message to all inputtypes that can handle ungraded responses
-
-        Does not return any value
-        """
-        # check against each inputtype
-        for the_input in self.inputs.values():
-            # if the input type has an ungraded function, pass in the values
-            if hasattr(the_input, "ungraded_response"):
-                the_input.ungraded_response(xqueue_msg, queuekey)
 
     def is_queued(self):
         """

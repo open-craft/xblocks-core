@@ -176,26 +176,6 @@ def find_with_default(node, path, default):
     return default
 
 
-def sanitize_html(html_code):
-    """
-    Sanitize html_code for safe embed on LMS pages.
-
-    Used to sanitize XQueue responses from Matlab.
-    """
-    attributes = nh3.ALLOWED_ATTRIBUTES.copy()
-    attributes.update(
-        {
-            "*": {"class", "style", "id"},
-            "audio": {"controls", "autobuffer", "autoplay", "src"},
-            "img": {"src", "width", "height", "class"},
-        }
-    )
-    output = nh3.clean(
-        html_code, tags=nh3.ALLOWED_TAGS | {"div", "p", "audio", "pre", "img", "span"}, attributes=attributes
-    )
-    return output
-
-
 def get_inner_html_from_xpath(xpath_node):
     """
     Returns inner html as string from xpath node.

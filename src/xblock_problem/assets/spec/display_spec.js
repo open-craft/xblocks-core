@@ -1141,15 +1141,15 @@ data-url='/problem/quiz/'> \
     });
   });
 
-  describe("Submitting an xqueue-graded problem", function () {
-    const matlabinput_html = readFixtures("matlabinput_problem.html");
+  describe("Submitting an externally graded problem", function () {
+    const queued_problem_html = readFixtures("queued_codeinput_problem.html");
 
     beforeEach(function () {
-      spyOn($, "postWithPrefix").and.callFake((url, callback) => callback({ html: matlabinput_html }));
+      spyOn($, "postWithPrefix").and.callFake((url, callback) => callback({ html: queued_problem_html }));
       jasmine.clock().install();
       this.problem = new Problem(mockRuntime, $(".xblock-student_view"));
       spyOn(this.problem, "poll").and.callThrough();
-      this.problem.render(matlabinput_html);
+      this.problem.render(queued_problem_html);
     });
 
     afterEach(() => jasmine.clock().uninstall());

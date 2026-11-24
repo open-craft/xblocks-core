@@ -1,5 +1,12 @@
 """
-LMS Interface to external queueing system (xqueue)
+Interface for queueing external grader submissions.
+
+Submissions go to edx-submissions, which stores them in the LMS and serves
+them to graders such as xqueue-watcher through its XQueue-compatible API.
+The header built here is an internal envelope: edx-submissions reads the
+queue name and the queue key out of it and builds its own header for the
+grader. The queue key format is the one the retired XQueue service used,
+since the problem's correct map still stores it.
 """
 
 import hashlib
@@ -7,9 +14,9 @@ import json
 import logging
 from typing import TYPE_CHECKING
 
-import requests
-from requests.auth import HTTPBasicAuth
+from submissions.errors import SubmissionError, SubmissionRequestError
 
+from xblock_problem.capa.errors import XQueueSubmissionError
 from xblock_problem.capa.xqueue_submission import XQueueInterfaceSubmission
 
 if TYPE_CHECKING:
@@ -17,13 +24,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 DATEFORMAT = "%Y%m%d%H%M%S"
-
-XQUEUE_METRIC_NAME = "edxapp.xqueue"
-
-# Wait time for response from Xqueue.
-XQUEUE_TIMEOUT = 35  # seconds
-CONNECT_TIMEOUT = 3.05  # seconds
-READ_TIMEOUT = 10  # seconds
 
 
 def make_hashkey(seed):
@@ -35,155 +35,65 @@ def make_hashkey(seed):
     return h.hexdigest()
 
 
-def make_xheader(lms_callback_url, lms_key, queue_name):
+def make_xheader(lms_key, queue_name):
     """
-    Generate header for delivery and reply of queue request.
+    Generate the header that accompanies a queue request.
 
-    Xqueue header is a JSON-serialized dict::
+    The header is a JSON-serialized dict::
 
-        { 'lms_callback_url': url to which xqueue will return the request (string),
-          'lms_key': secret key used by LMS to protect its state (string),
-          'queue_name': designate a specific queue within xqueue server, e.g. 'MITx-6.00x' (string)
+        { 'lms_key': secret key used by LMS to match the grader's reply to the request (string),
+          'queue_name': the queue the grader polls, e.g. 'MITx-6.00x' (string)
         }
     """
-    return json.dumps({"lms_callback_url": lms_callback_url, "lms_key": lms_key, "queue_name": queue_name})
-
-
-def parse_xreply(xreply):
-    """
-    Parse the reply from xqueue. Messages are JSON-serialized dict::
-
-        { 'return_code': 0 (success), 1 (fail)
-          'content': Message from xqueue (string)
-        }
-    """
-    try:
-        xreply = json.loads(xreply)
-    except ValueError as err:
-        log.error(err)
-        return (1, "unexpected reply from server")
-
-    return_code = xreply["return_code"]
-    content = xreply["content"]
-
-    return (return_code, content)
+    return json.dumps({"lms_key": lms_key, "queue_name": queue_name})
 
 
 class XQueueInterface:
-    """Initializes the XQueue interface."""
+    """Queues external grader submissions through edx-submissions."""
 
-    def __init__(
-        self,
-        url: str,
-        django_auth: dict[str, str],
-        requests_auth: HTTPBasicAuth | None = None,
-        block: "ProblemBlock" = None,
-        use_submission_service: bool = False,
-    ):
+    def __init__(self, block: "ProblemBlock"):
         """
-        Initializes the XQueue interface.
-
         Args:
-            url (str): The URL of the XQueue service.
-            django_auth (Dict[str, str]): Authentication credentials for Django.
-            requests_auth (Optional[HTTPBasicAuth], optional): Authentication for HTTP requests. Defaults to None.
-            block ('ProblemBlock', optional): Added as a parameter only to extract the course_id
-                to check the course waffle flag `send_to_submission_course.enable`.
-                This can be removed after the legacy xqueue is deprecated. Defaults to None.
-            use_submission_service (bool): If True, use the edx-submissions service instead of XQueue.
+            block (ProblemBlock): The problem the submissions belong to. edx-submissions
+                records the course, the problem and its maximum score with each one.
         """
-        self.url = url
-        self.auth = django_auth
-        self.session = requests.Session()
-        self.session.auth = requests_auth
         self.block = block
-        self.submission = XQueueInterfaceSubmission(self.block)
-        self.use_submission_service = use_submission_service
+        self.submission = XQueueInterfaceSubmission(block)
 
     def send_to_queue(self, header, body, files_to_upload=None):
         """
-        Submit a request to xqueue.
+        Queue a submission for an external grader.
 
         header: JSON-serialized dict in the format described in 'xqueue_interface.make_xheader'
 
-        body: Serialized data for the receipient behind the queueing service. The operation of
-              xqueue is agnostic to the contents of 'body'
+        body: Serialized data for the recipient behind the queueing service. The operation of
+              the queue is agnostic to the contents of 'body'
 
-        files_to_upload: List of file objects to be uploaded to xqueue along with queue request
+        files_to_upload: List of file objects to be stored along with the queue request
 
         Returns (error_code, msg) where error_code != 0 indicates an error
         """
-
-        # log the send to xqueue
-        header_info = json.loads(header)
-        _queue_name = header_info.get("queue_name", "")
-
-        # Attempt to send to queue
-        error, msg = self._send_to_queue(header, body, files_to_upload)
-
-        # Log in, then try again
-        if error and (msg == "login_required"):
-            error, content = self._login()
-            if error != 0:
-                # when the login fails
-                log.debug("Failed to login to queue: %s", content)
-                return (error, content)
-            if files_to_upload is not None:
-                # Need to rewind file pointers
-                for f in files_to_upload:
-                    f.seek(0)
-            error, msg = self._send_to_queue(header, body, files_to_upload)
-
-        return error, msg
-
-    def _login(self):
-        payload = {"username": self.auth["username"], "password": self.auth["password"]}
-        return self._http_post(self.url + "/xqueue/login/", payload)
-
-    def _send_to_queue(self, header, body, files_to_upload):
-        """Send the problem submission to XQueue, handling legacy fallback and edX submission logic."""
-
-        payload = {"xqueue_header": header, "xqueue_body": body}
-        files = {}
-        if files_to_upload is not None:
-            for f in files_to_upload:
-                files.update({f.name: f})
-
-        if self.block is None:
-            # XQueueInterface: if self.block is None, falling back to legacy xqueue submission.
-            log.error(
-                "Unexpected None block: falling back to legacy xqueue submission. "
-                "This may indicate a problem with the xqueue transition."
-            )
-            return self._http_post(self.url + "/xqueue/submit/", payload, files=files)
+        files = {f.name: f for f in files_to_upload or []}
 
         header_info = json.loads(header)
         queue_key = header_info["lms_key"]
 
-        if self.use_submission_service:
-            result = self.submission.send_to_submission(header, body, queue_key, files)
-            # send_to_submission reports submissions it couldn't create as {"error": msg}. Pass that
-            # back as an error so the learner is told it wasn't queued, rather than waiting on it forever.
-            if isinstance(result, dict) and "error" in result:
-                return 1, result["error"]
-            return None, ""
-
-        return self._http_post(self.url + "/xqueue/submit/", payload, files=files)
-
-    def _http_post(self, url, data, files=None):
-        """Send an HTTP POST request and handle connection errors, timeouts, and unexpected status codes."""
-
+        # Report anything that keeps the submission from being queued as an error, so the
+        # learner is told to try again rather than waiting on a submission that doesn't exist.
+        # send_to_submission returns {"error": msg} for a bad request body and raises for the
+        # rest; edx-submissions raises SubmissionError for its own failures.
+        #
+        # The message goes in front of the learner, and display.js shows it as HTML (see
+        # gentle_alert()), so it is a fixed string: the exception text can carry the
+        # learner's own answer. The details go to the log.
         try:
-            response = self.session.post(url, data=data, files=files, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT))
-        except requests.exceptions.ConnectionError as err:
-            log.error(err)
-            return 1, "cannot connect to server"
-
-        except requests.exceptions.ReadTimeout as err:
-            log.error(err)
-            return 1, "failed to read from the server"
-
-        if response.status_code not in [200]:
-            return 1, f"unexpected HTTP status code [{response.status_code}]"
-
-        return parse_xreply(response.text)
+            result = self.submission.send_to_submission(header, body, queue_key, files)
+        except SubmissionRequestError:
+            log.exception("Submission for %s was rejected by edx-submissions", self.block.usage_key)
+            return 1, "the submission was rejected"
+        except (SubmissionError, XQueueSubmissionError):
+            log.exception("Could not queue submission for %s", self.block.usage_key)
+            return 1, "the grading queue is unavailable"
+        if isinstance(result, dict) and "error" in result:
+            return 1, result["error"]
+        return 0, ""

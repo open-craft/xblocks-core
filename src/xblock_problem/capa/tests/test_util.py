@@ -13,7 +13,6 @@ from xblock_problem.capa.util import (
     contextualize_text,
     get_inner_html_from_xpath,
     remove_markup,
-    sanitize_html,
 )
 
 
@@ -117,20 +116,6 @@ class UtilTest(unittest.TestCase):
         assert not result
         result = compare_with_tolerance(111.0, complex(100.0, 0), "10%", True)
         assert result
-
-    def test_sanitize_html(self):
-        """
-        Test for html sanitization with nh3.
-        """
-        allowed_tags = ["div", "p", "audio", "pre", "span"]
-        for tag in allowed_tags:
-            queue_msg = f"<{tag}>Test message</{tag}>"
-            assert sanitize_html(queue_msg) == queue_msg
-
-        not_allowed_tag = "script"
-        queue_msg = f"<{not_allowed_tag}>Test message</{not_allowed_tag}>"
-        expected = ""
-        assert sanitize_html(queue_msg) == expected
 
     def test_get_inner_html_from_xpath(self):
         """

@@ -2579,17 +2579,14 @@ ScoreMessage = namedtuple("ScoreMessage", ["valid", "correct", "points", "msg"])
 @registry.register
 class CodeResponse(LoncapaResponse):
     """
-    Grade student code using an external queueing server, called 'xqueue'.
+    Grade student code with an external grader that pulls submissions from the LMS.
 
-    Expects 'xqueue' dict in LoncapaSystem with the following properties that are
+    Expects 'xqueue' object in LoncapaSystem with the following properties that are
     needed by CodeResponse::
 
         capa_system.xqueue = object with properties:
             interface: XQueueInterface object.
-            construct_callback: Per-StudentModule callback URL constructor,
-                defaults to using 'score_update' as the correct dispatch (function).
             default_queuename: Default queue name to submit request (string).
-        }
 
     External requests are only submitted for student submission grading, not
     for getting reference answers.
@@ -2643,18 +2640,11 @@ class CodeResponse(LoncapaResponse):
             "grader_payload": grader_payload,
         }
 
-        # matlab api key can be defined in course settings. if so, add it to the grader payload
-        api_key = getattr(self.capa_system, "matlab_api_key", None)
-        if api_key and self.xml.find("matlabinput") is not None:
-            self.payload["token"] = api_key
-            self.payload["endpoint_version"] = "2"
-            self.payload["requestor_id"] = self.capa_system.anonymous_student_id
-
         self.initial_display = find_with_default(codeparam, "initial_display", "")
         _ = self.capa_system.i18n.gettext
         self.answer = find_with_default(codeparam, "answer_display", _("No answer provided."))
 
-    def get_score(self, student_answers):  # pylint: disable=too-many-locals
+    def get_score(self, student_answers):
         _ = self.capa_system.i18n.gettext
         try:
             # Note that submission can be a file
@@ -2667,6 +2657,14 @@ class CodeResponse(LoncapaResponse):
                 convert_files_to_filenames(student_answers),
             )
             raise Exception(err) from err  # pylint: disable=broad-exception-raised
+
+        # MATLAB problems sent code to the MathWorks service through XQueue, and neither
+        # exists any more (https://github.com/openedx/public-engineering/issues/192). The
+        # tag stays so old problems parse and keep their scores, but a new submission has
+        # no grader to go to, so tell the learner instead of queueing it. Raising keeps
+        # the attempt from being counted.
+        if self.inputfields[0].tag == "matlabinput":
+            raise ResponseError(_("MATLAB problems can no longer be graded."))
 
         # We do not support xqueue within Studio.
         if self.capa_system.xqueue is None:
@@ -2684,8 +2682,7 @@ class CodeResponse(LoncapaResponse):
 
         # Generate header
         queuekey = make_hashkey(str(self.capa_system.seed) + qtime + anonymous_student_id + self.answer_id)
-        callback_url = self.capa_system.xqueue.construct_callback()
-        xheader = make_xheader(lms_callback_url=callback_url, lms_key=queuekey, queue_name=self.queue_name)
+        xheader = make_xheader(lms_key=queuekey, queue_name=self.queue_name)
 
         # Generate body
         if is_list_of_files(submission):
@@ -2722,22 +2719,32 @@ class CodeResponse(LoncapaResponse):
             "time": qtime,
         }
 
-        cmap = CorrectMap()
         if error:
+            # Raising here, rather than returning an error correct map, keeps the failed
+            # hand-off from counting as an attempt: submit_problem catches ResponseError and
+            # shows the message without counting the attempt or replacing the correct map.
+            # It does save the new answers, so two cases are left behind on purpose, since
+            # this is a failure path and the first is what every ResponseError already does:
+            #   - If an earlier submission is still queued, the failed answer is saved next
+            #     to that submission's queue state, and its grade lands beside the new answer.
+            #   - In a problem with more than one <coderesponse>, a response queued before
+            #     this one failed stays pending in edx-submissions, and update_score ignores
+            #     the grader's reply since its queue key never made it into the correct map.
             _ = self.capa_system.i18n.gettext
-            error_msg = _(
-                "Unable to deliver your submission to grader (Reason: {error_msg}). Please try again later."
-            ).format(error_msg=msg)
-            cmap.set(self.answer_id, queuestate=None, msg=error_msg)
-        else:
-            # Queueing mechanism flags:
-            #   1) Backend: Non-null CorrectMap['queuestate'] indicates that
-            #      the problem has been queued
-            #   2) Frontend: correctness='incomplete' eventually trickles down
-            #      through inputtypes.textbox and .filesubmission to inform the
-            #      browser to poll the LMS
-            cmap.set(self.answer_id, queuestate=queuestate, correctness="incomplete", msg=msg)
+            raise ResponseError(
+                _("Unable to deliver your submission to grader (Reason: {error_msg}). Please try again later.").format(
+                    error_msg=msg
+                )
+            )
 
+        # Queueing mechanism flags:
+        #   1) Backend: Non-null CorrectMap['queuestate'] indicates that
+        #      the problem has been queued
+        #   2) Frontend: correctness='incomplete' eventually trickles down
+        #      through inputtypes.textbox and .filesubmission to inform the
+        #      browser to poll the LMS
+        cmap = CorrectMap()
+        cmap.set(self.answer_id, queuestate=queuestate, correctness="incomplete", msg=msg)
         return cmap
 
     def update_score(self, score_msg, oldcmap, queuekey):
