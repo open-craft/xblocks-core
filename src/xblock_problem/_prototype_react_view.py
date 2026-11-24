@@ -1,19 +1,22 @@
 """
-PROTOTYPE ONLY (throwaway branch `prototype/problem-paragon-roundtrip`).
+PROTOTYPE ONLY (throwaway branch `prototype/problem-paragon-numeric`).
 
 Structured view/action data for a React + Paragon problem renderer that lives inside
 the current `xblocks-core` `ProblemBlock`.
 
 Question this prototype answers: can the *existing* ProblemBlock, inside the
-*existing* LMS unit iframe, render a real single-select CAPA problem with
-React + Paragon from structured data derived from CAPA, submit through the real
-CAPA grading path, show structured feedback, reload with the same selected
-answer and attempts, and leave the legacy view looking at the same persisted
-attempt?
+*existing* LMS unit iframe, render a real CAPA problem with React + Paragon from
+structured data derived from CAPA -- a single-select multiple choice and the
+Studio-basic numerical input (`<numericalresponse><formulaequationinput/></...>`) --
+including the existing CAPA `preview_formcalc` preview and MathJax typesetting,
+submit through the real CAPA grading path, show structured feedback, and reload
+with the same answer and attempts?
 
 Rules this file deliberately keeps (do not grow them in a prototype):
-- only one `<multiplechoiceresponse>` with exactly one `<choicegroup>`; every
-  other problem falls back to the unchanged legacy HTML renderer;
+- only one supported response with exactly one input: either one
+  `<multiplechoiceresponse>` with one `<choicegroup>`, or one
+  `<numericalresponse>` with one `<formulaequationinput>`; every other problem
+  falls back to the unchanged legacy HTML renderer;
 - no correct answers and no per-choice correctness before CAPA has graded;
 - containment is fail-closed: the rollout flag AND an exact match with the one
   usage key in `XBLOCKS_CORE_PROBLEM_REACT_BLOCK_ID` (missing/blank allow-list
@@ -23,7 +26,7 @@ Rules this file deliberately keeps (do not grow them in a prototype):
 - CAPA stays the only grader and the only owner of persisted learner state.
 
 Remaining duplication with the legacy path (deliberate, limited to this file):
-- the prompt/description/choice-label strings are re-derived from CAPA's
+- the prompt/description/input strings are re-derived from CAPA's
   `problem_data` + XML tree instead of the Django templates;
 - button visibility is recomputed from ProblemBlock helpers that the legacy
   template also calls, so the "which buttons" rule now has two call sites.
@@ -49,6 +52,9 @@ ENV_VAR = "XBLOCKS_CORE_PROBLEM_REACT_RENDERER"
 BLOCK_ID_ENV_VAR = "XBLOCKS_CORE_PROBLEM_REACT_BLOCK_ID"
 SUPPORTED_ACTIONS = frozenset({"problem_check", "problem_reset"})
 VIEW_SCHEMA = "prototype-react-view/1"
+
+INPUT_TAGS = frozenset(inputtypes.registry.registered_tags())
+RESPONSE_TAGS = frozenset(responsetypes.registry.registered_tags())
 
 
 def _enabled_flag():
@@ -120,10 +126,8 @@ def _prompt_html(block, lcp, response, input_id):
     if response_data.get("label"):
         parts.append(str(response_data["label"]))
 
-    response_tags = set(responsetypes.registry.registered_tags())
-    input_tags = set(inputtypes.registry.registered_tags())
     for child in lcp.tree:
-        if child is response or child.tag in response_tags or child.tag in input_tags:
+        if child is response or child.tag in RESPONSE_TAGS or child.tag in INPUT_TAGS:
             continue
         if child.tag == "script":
             continue
@@ -137,9 +141,54 @@ def _prompt_html(block, lcp, response, input_id):
     return html
 
 
+def _single_input(response):
+    """
+    The one input child of a response, or None when the shape is not supported.
+    """
+    inputs = [child for child in response if child.tag in INPUT_TAGS]
+    return inputs[0] if len(inputs) == 1 else None
+
+
+def _find_supported_response(lcp):
+    """
+    (mode, response, input_node, input_id) for a supported problem shape, else None.
+
+    Supported shapes are deliberately only the two the prototype UI implements:
+    a single multiple-choice choicegroup, and a single Studio-basic numerical
+    input (formulaequationinput).
+    """
+    responses = lcp.tree.findall(".//multiplechoiceresponse")
+    if len(responses) == 1:
+        response = responses[0]
+        choicegroups = response.findall("./choicegroup")
+        if len(choicegroups) == 1:
+            choicegroup = choicegroups[0]
+            input_id = choicegroup.get("id")
+            if input_id and len(choicegroup.findall("./choice")) >= 2:
+                return "choice", response, choicegroup, input_id
+
+    responses = lcp.tree.findall(".//numericalresponse")
+    if len(responses) == 1:
+        response = responses[0]
+        input_node = _single_input(response)
+        if input_node is not None and input_node.tag == "formulaequationinput":
+            input_id = input_node.get("id")
+            if input_id:
+                return "numeric", response, input_node, input_id
+
+    return None
+
+
+def _selected_value(lcp, input_id):
+    selected = (lcp.student_answers or {}).get(input_id, "")
+    if isinstance(selected, list):
+        selected = selected[0] if selected else ""
+    return str(selected)
+
+
 def build_view(block):
     """
-    Build the structured view state for a supported single-select problem, else None.
+    Build the structured view state for a supported problem, else None.
     """
     try:
         lcp = block.lcp
@@ -148,24 +197,12 @@ def build_view(block):
     if lcp is None:
         return None
 
-    responses = lcp.tree.findall(".//multiplechoiceresponse")
-    if len(responses) != 1:
+    supported = _find_supported_response(lcp)
+    if supported is None:
         return None
-    response = responses[0]
-    choicegroups = response.findall("./choicegroup")
-    if len(choicegroups) != 1:
-        return None
-    choicegroup = choicegroups[0]
-    input_id = choicegroup.get("id")
-    if not input_id:
-        return None
-    xml_choices = choicegroup.findall("./choice")
-    if len(xml_choices) < 2:
-        return None
+    mode, response, input_node, input_id = supported
 
-    selected = (lcp.student_answers or {}).get(input_id, "")
-    if isinstance(selected, list):
-        selected = selected[0] if selected else ""
+    selected = _selected_value(lcp, input_id)
 
     correctness_visible = block.correctness_available()
     status = "unsubmitted"
@@ -191,28 +228,49 @@ def build_view(block):
         for description_id, description_html in (response_data.get("descriptions") or {}).items()
     ]
 
+    if mode == "choice":
+        input_state = {
+            "id": input_id,
+            "name": f"input_{input_id}",
+            "kind": "radio",
+            "value": selected,
+            "size": "",
+            "trailing_text": "",
+            "preview": False,
+        }
+        choices = [
+            {
+                "id": choice.get("name"),
+                "label_html": _choice_label_html(choice),
+                "selected": choice.get("name") == selected,
+            }
+            for choice in input_node.findall("./choice")
+        ]
+    else:
+        input_state = {
+            "id": input_id,
+            "name": f"input_{input_id}",
+            "kind": "text",
+            "value": selected,
+            "size": input_node.get("size") or "20",
+            "trailing_text": input_node.get("trailing_text") or "",
+            # Existing CAPA preview_formcalc handler, reached through input_ajax.
+            "preview": True,
+            "preview_url": f"{block.ajax_url}/input_ajax",
+        }
+        choices = []
+
     return {
         "schema": VIEW_SCHEMA,
+        "mode": mode,
         "block_id": str(block.usage_key),
         "problem_html_id": block.usage_key.html_id(),
         "ajax_url": block.ajax_url,
         "title": block.display_name_with_default,
         "prompt_html": _prompt_html(block, lcp, response, input_id),
         "descriptions": descriptions,
-        "input": {
-            "id": input_id,
-            "name": f"input_{input_id}",
-            "type": "radio",
-            "value": selected,
-        },
-        "choices": [
-            {
-                "id": choice.get("name"),
-                "label_html": _choice_label_html(choice),
-                "selected": choice.get("name") == selected,
-            }
-            for choice in xml_choices
-        ],
+        "input": input_state,
+        "choices": choices,
         "status": status,
         "message": message,
         "hint": hint,

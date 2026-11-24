@@ -23,3 +23,19 @@
   color: #5a5a5a;
   font-size: 0.875rem;
 }
+
+.xblock-problem-react .react-problem-numeric-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.xblock-problem-react .react-problem-numeric-input {
+  max-width: 20rem;
+}
+
+.xblock-problem-react .react-problem-preview {
+  min-height: 1.75rem;
+  margin-top: 0.5rem;
+  color: #3d3d3d;
+}
