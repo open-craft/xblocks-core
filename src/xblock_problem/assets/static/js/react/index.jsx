@@ -1,5 +1,6 @@
 /**
- * PROTOTYPE ONLY (throwaway branch `prototype/problem-paragon-roundtrip`).
+ * PROTOTYPE ONLY (throwaway branch `prototype/problem-paragon-wgu-theme`,
+ * extends `prototype/problem-paragon-roundtrip`).
  *
  * React + Paragon renderer for one single-select CAPA problem shape, mounted in
  * the existing LMS unit iframe by the existing xblocks-core ProblemBlock.
@@ -7,6 +8,11 @@
  * It renders server-derived structured state only; it never parses widget HTML.
  * Submitting still goes through the real `xmodule_handler` -> CAPA grading path
  * and the reply is the structured view, not server-rendered UI.
+ *
+ * Appearance: the block bundles Paragon's stock `core` + `light` sheets (its
+ * platform defaults, at the installed Paragon version) and then loads whatever
+ * theme the *deployment* configures via `PARAGON_THEME_URLS` (themeUrls.js).
+ * The block declares no brand constant of its own.
  *
  * Not implemented on purpose (legacy UI still owns these): Save, Show answer,
  * hints, file/multi-input problems, and every other problem type (those fall
@@ -17,9 +23,11 @@ import { createRoot } from 'react-dom/client';
 import {
   Alert, Button, Card, Form,
 } from '@openedx/paragon';
-import '@openedx/paragon/dist/light.css';
+// Canonical Paragon order: core first, then the light variant on top.
 import '@openedx/paragon/dist/core.css';
+import '@openedx/paragon/dist/light.css';
 import './problem-react.css';
+import { loadDeploymentTheme } from './themeUrls';
 
 const KNOWN_SUCCESS = ['correct', 'incorrect', 'submitted', 'partially-correct'];
 
@@ -199,6 +207,9 @@ function renderProblemReact(runtime, element, initArgs) {
   if (!mountPoint) {
     return;
   }
+  // Fire-and-forget: the bundled defaults are already applied, so the learner
+  // never waits on the deployment config endpoint.
+  loadDeploymentTheme(element.ownerDocument);
   createRoot(mountPoint).render(<ProblemApp initialView={initArgs} />);
 }
 

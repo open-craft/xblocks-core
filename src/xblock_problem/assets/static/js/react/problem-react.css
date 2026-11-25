@@ -1,11 +1,12 @@
 /*
- * Minimal deployment-side theme setup for the prototype: one design token
- * override, scoped to the renderer, proving Paragon components pick up
- * deployment tokens inside the LMS unit iframe.
+ * Block-specific layout for the prototype renderer.
+ *
+ * Deliberately token-free: every colour, focus ring and state comes from the
+ * Paragon baseline the block bundles, plus whatever the deployment configures
+ * through PARAGON_THEME_URLS (see themeUrls.js). No brand constant is declared
+ * here, so a deployment theme - or its absence - decides the appearance.
  */
 .xblock-problem-react {
-  --pgn-color-primary-base: #0b5f5a;
-  --pgn-color-primary-500: #0b5f5a;
   padding: 1rem;
 }
 
