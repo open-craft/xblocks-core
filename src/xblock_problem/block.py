@@ -46,6 +46,7 @@ from xblock.progress import Progress
 from xblock.runtime import KeyValueStore, KvsFieldData
 from xblock.scorable import ScorableXBlockMixin, Score, ShowCorrectness
 
+from xblock_problem import legacy_theme
 from xblock_problem.capa import responsetypes
 from xblock_problem.capa.capa_problem import LoncapaProblem, LoncapaSystem
 from xblock_problem.capa.inputtypes import Status
@@ -442,6 +443,13 @@ class ProblemBlock(ScorableXBlockMixin, LegacyXmlMixin, XBlock):
             html = self.get_html()
         fragment = Fragment(html)
         fragment.add_css_url(self.runtime.local_resource_url(self, "public/css/ProblemBlockDisplay.css"))
+        # PROTOTYPE: scoped deployment-token styling of the stock view; no-op unless a
+        # deployment supplies the token set. See xblock_problem/legacy_theme.py.
+        theme_css = legacy_theme.scoped_css(
+            f"#problem_{self.usage_key.html_id()}", self.usage_key
+        )
+        if theme_css:
+            fragment.add_css(theme_css)
         self._add_i18n_js_catalog(fragment)
         fragment.add_javascript_url(self.runtime.local_resource_url(self, "public/js/ProblemBlockDisplay.js"))
         fragment.initialize_js("Problem")
