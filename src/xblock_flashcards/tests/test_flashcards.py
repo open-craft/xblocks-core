@@ -1,7 +1,9 @@
 """Tests for the Flashcards Block"""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
+import pytest
+from django.utils.translation import override
 from xblock.field_data import DictFieldData
 from xblock.fields import ScopeIds
 from xblock.test.toy_runtime import ToyRuntime
@@ -28,6 +30,27 @@ def test_defaults_render():
         "is_shuffled": True,
         "cards": [],
     }
+    # The active language, which is LANGUAGE_CODE in the test settings.
+    assert init_args["locale"] == "en-us"
+
+
+@pytest.mark.parametrize(("language", "locale"), [("pt-br", "pt-br"), ("es-419", "es-419"), (None, "en")])
+def test_render_passes_request_language(language, locale):
+    """Test the student view passes the request's language to the frontend, or English without one."""
+    block = make_block()
+    with patch("xblock_flashcards.flashcards.get_language", return_value=language):
+        frag = block.student_view().to_dict()
+
+    assert frag["json_init_args"]["locale"] == locale
+
+
+def test_render_passes_active_language():
+    """Test the locale follows Django's active language."""
+    block = make_block()
+    with override("fr"):
+        frag = block.student_view().to_dict()
+
+    assert frag["json_init_args"]["locale"] == "fr"
 
 
 def test_load_data_default():
@@ -64,3 +87,32 @@ def test_load_data():
             "editor_open": True,
         }
     ]
+
+
+def test_i18n_js_namespace():
+    """Test the namespace of the JavaScript catalog matches the one the frontend reads."""
+    assert FlashcardsXBlock.i18n_js_namespace == "XBlockFlashcardsI18N"
+    assert FlashcardsXBlock.get_i18n_js_namespace() == "XBlockFlashcardsI18N"
+
+
+def test_render_loads_i18n_js_catalog_before_block_js():
+    """Test the student view adds the JavaScript catalog, when there is one, before the block's JS."""
+    block = make_block()
+    with patch("xblock.runtime.NullI18nService.get_javascript_i18n_catalog_url", return_value="/static/catalog.js"):
+        frag = block.student_view()
+
+    js = [r for r in frag.resources if r.mimetype == "application/javascript"]
+    assert js[0].kind == "url"
+    assert js[0].data == "/static/catalog.js"
+    assert "function FlashCardsXBlock(" in js[1].data
+
+
+@pytest.mark.parametrize("i18n_service", [Mock(get_javascript_i18n_catalog_url=Mock(return_value=None)), Mock(spec=[])])
+def test_render_without_i18n_js_catalog(i18n_service):
+    """Test no catalog is added when there is none, or the i18n service can't provide one."""
+    block = make_block()
+    block.runtime.service = Mock(return_value=i18n_service)
+
+    frag = block.student_view()
+
+    assert [r.kind for r in frag.resources] == ["text"]

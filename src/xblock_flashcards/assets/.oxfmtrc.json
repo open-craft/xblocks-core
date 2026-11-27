@@ -4,5 +4,8 @@
   "singleQuote": true,
   "tabWidth": 2,
   "useTabs": false,
-  "ignorePatterns": ["src/coverage/**"]
+  "ignorePatterns": [
+    "src/coverage/**",
+    "i18n/messages.js"
+  ]
 }

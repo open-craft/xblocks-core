@@ -3,7 +3,7 @@
 The React + Paragon student view of the Flashcards XBlock.
 
 The bundle is built with Vite in library mode from `src/main.tsx`, which exports
-`renderBlock(runtime, element, { data })`. The XBlock's `student_view`
+`renderBlock(runtime, element, { data, locale })`. The XBlock's `student_view`
 loads `static/js/render.js`, which dynamically imports the built bundle and
 calls `renderBlock` with the block's data.
 
@@ -33,3 +33,25 @@ npm run format  # oxfmt
 ```
 
 The build output in `../public/` is git-ignored similar to other NPM workspaces.
+
+## Translations
+
+The frontend uses react-intl, with all messages defined in `src/messages.ts`.
+The Open edX translation pipeline for XBlocks only extracts gettext calls from
+Python and JavaScript files, so the messages travel through it as follows:
+
+1. `npm run i18n_extract` extracts the messages with formatjs, and writes each
+   one as a `gettext("<defaultMessage>")` call in `i18n/messages.js`, with its
+   `description` as a translator comment. That file is never run or bundled.
+   Run the script after changing any message, and commit the result: a test
+   fails when the file is out of date.
+2. The repository's `make extract_translations` extracts the strings from
+   `i18n/messages.js` like any other JavaScript file, into the block's
+   `django.po`, which is translated with the rest of the block's strings.
+3. The platform compiles the translations into a JavaScript catalog, which the
+   XBlock adds to the page as `window.XBlockFlashcardsI18N`.
+4. `src/i18n.ts` translates each message by looking up its `defaultMessage` in
+   that catalog, and passes the result to react-intl's `IntlProvider`.
+
+Define new messages in `src/messages.ts`: messages defined elsewhere are not
+translated at runtime, and a test fails if there are any.

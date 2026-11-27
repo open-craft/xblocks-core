@@ -2,6 +2,7 @@
 
 import json
 
+from django.utils.translation import get_language
 from django.utils.translation import gettext_noop as _
 from web_fragments.fragment import Fragment
 from xblock.core import Response, XBlock
@@ -19,6 +20,9 @@ class FlashcardsXBlock(XBlock):
     The Student view will display the game content and allow the student to interact
     accordingly.
     """
+
+    # The frontend reads its translations from ``window.XBlockFlashcardsI18N``.
+    i18n_js_namespace = "XBlockFlashcardsI18N"
 
     display_name = String(
         default=_("Flashcards"),
@@ -43,6 +47,7 @@ class FlashcardsXBlock(XBlock):
         The student view for flashcards game.
         """
         frag = Fragment()
+        self._add_i18n_js_catalog(frag)
         frag.add_javascript(read_resource("static/js/render.js"))
         frag.initialize_js(
             "FlashCardsXBlock",
@@ -53,9 +58,22 @@ class FlashcardsXBlock(XBlock):
                     "is_shuffled": self.is_shuffled,
                     "cards": self.cards,
                 },
+                "locale": get_language() or "en",
             },
         )
         return frag
+
+    def _add_i18n_js_catalog(self, fragment):
+        """
+        Add this block's JavaScript translation catalog to the fragment, if the runtime provides one.
+
+        The catalog defines ``window.XBlockFlashcardsI18N`` (see ``i18n_js_namespace``), which the
+        frontend uses to translate its messages. Add it before the block's own JS.
+        """
+        i18n_service = self.runtime.service(self, "i18n")
+        if url_fetch := getattr(i18n_service, "get_javascript_i18n_catalog_url", None):
+            if url := url_fetch(self):
+                fragment.add_javascript_url(url)
 
     # this cannot be json_handler, because json_handler only supports POST requests
     @XBlock.handler

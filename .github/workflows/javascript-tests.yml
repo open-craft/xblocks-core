@@ -51,3 +51,34 @@ jobs:
 
       - name: Run tests
         run: npm run test-ci
+
+  frontend-translations:
+    name: Check Extracted Frontend Translations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # React frontends write their messages to a file that `make extract_translations`
+      # reads (e.g. src/xblock_flashcards/assets/i18n/messages.js). It must be committed.
+      - name: Extract frontend translations
+        run: npm run i18n_extract
+
+      - name: Check the extracted translations are committed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff
+            echo "::error::Frontend messages changed: run 'npm run i18n_extract' and commit the result."
+            exit 1
+          fi

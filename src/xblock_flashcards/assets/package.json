@@ -10,7 +10,8 @@
     "test-ci": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "i18n_extract": "node scripts/extract-translations.ts"
   },
   "dependencies": {
     "@openedx/paragon": "^23.23.2",
@@ -19,6 +20,7 @@
     "react-intl": "^10.2.2"
   },
   "devDependencies": {
+    "@formatjs/cli-lib": "^10.6.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
