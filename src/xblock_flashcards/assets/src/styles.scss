@@ -1,0 +1,6 @@
+// Styles for the flashcards block itself. Paragon's styles are built
+// separately from `paragon.scss`, so they are not imported here.
+// This file is imported with `?inline` in `shadow.ts` and adopted by the
+// block's shadow root, so nothing here leaks into the host page.
+@use 'App';
+@use 'components/FlashCard';

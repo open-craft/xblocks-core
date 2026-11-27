@@ -1,21 +1,26 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { createRequire } from 'module';
+import { dirname, join, resolve } from 'path';
 import { pathToFileURL } from 'url';
 
-// Custom Sass importer that strips the webpack-style `~` prefix
-// and resolves the import from node_modules.
+const require = createRequire(import.meta.url);
+
+// Custom Sass importer for the webpack-style `~package/path` imports used by
+// Paragon's SCSS. The package is located with Node's resolution, since npm
+// workspaces hoist dependencies to the repository root.
 const tildeImporter = {
   findFileUrl(url: string) {
-    if (url.startsWith('~')) {
-      const resolved = resolve(
-        import.meta.dirname,
-        'node_modules',
-        url.substring(1),
-      );
-      return pathToFileURL(resolved);
+    if (!url.startsWith('~')) {
+      return null;
     }
-    return null;
+    const path = url.substring(1);
+    const segments = path.split('/');
+    const packageName = segments
+      .slice(0, path.startsWith('@') ? 2 : 1)
+      .join('/');
+    const packageDir = dirname(require.resolve(`${packageName}/package.json`));
+    return pathToFileURL(join(packageDir, path.substring(packageName.length)));
   },
 };
 
@@ -40,6 +45,8 @@ export default defineConfig(({ mode }) => ({
       scss: {
         loadPaths: [resolve(import.meta.dirname, 'node_modules')],
         importers: [tildeImporter],
+        // Paragon and Bootstrap's SCSS use deprecated Sass features.
+        quietDeps: true,
         silenceDeprecations: ['import', 'global-builtin'],
       },
     },

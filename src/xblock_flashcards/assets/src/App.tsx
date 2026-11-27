@@ -18,7 +18,6 @@ import {
 import { ChevronLeft, ChevronRight, Question } from '@openedx/paragon/icons';
 
 import type { CardType } from './types';
-import './App.css';
 import messages from './messages';
 import FlashCard from './components/Flashcard';
 
@@ -45,6 +44,9 @@ function App({ cards, displayName, isShuffled }: AppProps) {
   const totalCards = cardList.length;
   const [currentCard, setCurrentCard] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
+  // Overlays (the help tooltip) are portalled here rather than to
+  // document.body, so they stay inside the block's styled shadow root.
+  const blockRef = useRef<HTMLDivElement>(null);
 
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const liveRegionRef = useRef<HTMLDivElement>(null);
@@ -124,6 +126,7 @@ function App({ cards, displayName, isShuffled }: AppProps) {
 
   return (
     <div
+      ref={blockRef}
       className="flashcards-block shadow-lg rounded-lg"
       role="region"
       aria-label={formatMessage(messages.regionLabel)}
@@ -191,6 +194,7 @@ function App({ cards, displayName, isShuffled }: AppProps) {
         )}
         <Col className="flex-grow-0 align-self-end">
           <OverlayTrigger
+            container={blockRef}
             overlay={
               <Tooltip id="tooltip-flashcard">
                 {formatMessage(messages.bottomTooltip)}

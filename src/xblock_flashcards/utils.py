@@ -10,7 +10,7 @@ from importlib.resources import files
 def read_resource(path):
     """
     Return the text of a file bundled with this package, e.g.
-    ``read_resource("static/html/flashcards.html")``.
+    ``read_resource("static/js/render.js")``.
 
     Paths are relative to the ``xblock_flashcards`` package. This replaces
     ``pkg_resources.resource_string``, which setuptools no longer ships.

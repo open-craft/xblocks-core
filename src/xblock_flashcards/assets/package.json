@@ -4,13 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:watch": "concurrently -k -n tsc,vite -c blue,magenta \"tsc -b --watch --preserveWatchOutput\" \"vite build --watch\"",
     "test": "vitest run",
     "test-ci": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint",
-    "preview": "vite preview",
     "format": "oxfmt"
   },
   "dependencies": {
@@ -28,6 +27,7 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.3.0",
+    "concurrently": "^10.0.7",
     "jsdom": "^29.1.1",
     "oxfmt": "^0.79.0",
     "oxlint": "^1.90.0",

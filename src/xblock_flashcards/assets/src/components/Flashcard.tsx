@@ -4,7 +4,6 @@ import { Card, useMediaQuery, breakpoints } from '@openedx/paragon';
 
 import { type CardSide, type CardType } from '../types';
 import messages from '../messages';
-import './FlashCard.css';
 
 interface FlashCardProps {
   card: CardType;

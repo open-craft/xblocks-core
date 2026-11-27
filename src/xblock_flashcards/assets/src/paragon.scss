@@ -1,0 +1,75 @@
+// The parts of Paragon used by the block, built from Paragon's SCSS sources.
+//
+// This follows Paragon's own `styles/scss/core/core.scss`, which builds
+// `dist/core.min.css`, but only includes the components and utilities the block
+// uses, which roughly halves the CSS. When using another Paragon component,
+// import its styles from `src/<Component>` below, or it will be unstyled.
+
+// Sass functions, variables and mixins: these emit no CSS.
+@import '~@openedx/paragon/styles/scss/core/functions';
+@import '~@openedx/paragon/styles/scss/core/variables';
+@import '~bootstrap/scss/mixins';
+@import '~@openedx/paragon/styles/scss/core/bootstrap-override/mixins';
+
+// Base styles.
+@import '~bootstrap/scss/reboot';
+@import '~@openedx/paragon/styles/scss/core/typography';
+@import '~@openedx/paragon/styles/scss/core/grid';
+@import '~bootstrap/scss/transitions';
+
+// Utilities. The small sets are included whole; from the large ones (spacing
+// and flex) only the classes used by the block are defined, at the end.
+@import '~bootstrap/scss/utilities/display';
+@import '~bootstrap/scss/utilities/screenreaders';
+@import '~bootstrap/scss/utilities/shadows';
+@import '~@openedx/paragon/styles/scss/core/bootstrap-override/utilities/text';
+@import '~@openedx/paragon/styles/scss/core/bootstrap-override/utilities/background';
+@import '~@openedx/paragon/styles/scss/core/bootstrap-override/utilities/borders';
+
+// Design tokens: Paragon core and the light theme, as CSS variables. The light
+// theme's colour utility classes (`utility-classes.css`) are not included.
+@import '~@openedx/paragon/styles/css/core/variables';
+@import '~@openedx/paragon/styles/css/core/abstraction-variables';
+@import '~@openedx/paragon/styles/css/themes/light/variables';
+@import '~@openedx/paragon/styles/css/themes/light/abstraction-variables';
+
+// Components used by the block.
+@import '~@openedx/paragon/src/Button';
+@import '~@openedx/paragon/src/Card';
+@import '~@openedx/paragon/src/Icon';
+@import '~@openedx/paragon/src/IconButton';
+@import '~@openedx/paragon/src/Tooltip';
+
+// Spacing and flex utilities used by the block, as Paragon defines them.
+.justify-content-center {
+  justify-content: center !important;
+}
+
+.justify-content-end {
+  justify-content: flex-end !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.align-self-end {
+  align-self: flex-end !important;
+}
+
+.flex-grow-0 {
+  flex-grow: 0 !important;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.mt-4 {
+  margin-top: calc(var(--pgn-spacing-spacer-base) * 1.5) !important;
+}
+
+.mx-4 {
+  margin-right: calc(var(--pgn-spacing-spacer-base) * 1.5) !important;
+  margin-left: calc(var(--pgn-spacing-spacer-base) * 1.5) !important;
+}
